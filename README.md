@@ -21,6 +21,8 @@ npm run dev
 | `NEXT_PUBLIC_SITE_URL` | public | Canonical URL for the sitemap, canonical tags and OG cards |
 
 On Vercel, add the same variables under Project → Settings → Environment Variables.
+`vercel.json` pins the framework to Next.js, so the build works even if the
+project's Framework Preset is left on "Other".
 Never commit `.env.local`.
 
 ## How it works
