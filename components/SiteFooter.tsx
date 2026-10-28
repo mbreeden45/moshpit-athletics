@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { POPUP_URL, SITE_NAME } from "@/lib/site";
+import { POPUP_URL, SITE_NAME, SUPPORT_MAILTO } from "@/lib/site";
 
 const LINKS = [
   { label: "Terms", href: `${POPUP_URL}/terms-and-conditions` },
   { label: "Privacy", href: `${POPUP_URL}/privacy-policy` },
   { label: "Checkout", href: POPUP_URL },
+  { label: "Contact", href: SUPPORT_MAILTO },
 ];
 
 export function SiteFooter() {

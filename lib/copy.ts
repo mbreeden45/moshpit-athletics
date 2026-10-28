@@ -31,8 +31,12 @@ export const PRINT_PROFILE = {
 export const CARE_COPY =
   "Machine wash cold inside-out with like colors. Hang dry or tumble low. Dark colorways are pre-treated to lock in white ink vibrancy; any initial wash scent or crispness clears after the first rinse.";
 
-export const SHIPPING_RETURNS_COPY =
-  "Orders ship in 3 to 7 business days. Because items are produced specifically for each order, all sales are final. If an item arrives misprinted or damaged, contact us with photos for an immediate replacement.";
+/** Rendered as `lead` + mailto link (`linkText`) + `tail`. */
+export const SHIPPING_RETURNS = {
+  lead: "Orders ship in 3 to 7 business days. Because items are produced specifically for each order, all sales are final. If an item arrives misprinted or damaged, ",
+  linkText: "contact us at support@moshpitathletics.com",
+  tail: " with photos for an immediate replacement.",
+} as const;
 
 export const CHECKOUT_NOTE =
   "Checkout, taxes and shipping are handled on our Printify Pop-Up store. Confirm color and size on the next page.";

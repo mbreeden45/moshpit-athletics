@@ -64,8 +64,9 @@ Archivo (variable width, 62–80% stretch) for headlines and IBM Plex Mono at
 
 Where the mockup shows things the Pop-Up flow doesn't support (Apple Pay
 buttons, a live bag count, About/Contact pages), the site uses working
-equivalents: "Buy now", a "Bag" link to the Pop-Up, and links to the
-Pop-Up's own Terms and Privacy pages.
+equivalents: "Buy now", a "Bag" link to the Pop-Up, links to the Pop-Up's
+own Terms and Privacy pages, and a Contact mailto to
+support@moshpitathletics.com (set in `lib/site.ts`).
 
 ## Scripts
 

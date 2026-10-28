@@ -1,10 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { getMeasurement } from "@/lib/blanks";
-import { CARE_COPY, CHECKOUT_NOTE, FIT_COPY, SHIPPING_RETURNS_COPY, TOP_BANNER } from "@/lib/copy";
+import { CARE_COPY, CHECKOUT_NOTE, FIT_COPY, SHIPPING_RETURNS, TOP_BANNER } from "@/lib/copy";
 import { formatPrice, type ProductImage, type StorefrontProduct } from "@/lib/product";
+import { SUPPORT_MAILTO } from "@/lib/site";
 import { PrintProfile } from "./PrintProfile";
 
 const POSITION_ORDER = ["front", "back", "folded", "left_sleeve", "right_sleeve", "other"];
@@ -71,7 +72,7 @@ export function ProductConfigurator({ product, as: Heading = "h1", stickyBar = f
     }
   }
 
-  const panels = [
+  const panels: { title: string; body: ReactNode; list: string[] }[] = [
     {
       title: product.isGarment ? "Garment specs" : "Details",
       body: blank
@@ -81,7 +82,19 @@ export function ProductConfigurator({ product, as: Heading = "h1", stickyBar = f
       list: blank ? [] : product.descriptionBullets.slice(0, 8),
     },
     ...(product.isGarment ? [{ title: "Care", body: CARE_COPY, list: [] }] : []),
-    { title: "Shipping and returns", body: SHIPPING_RETURNS_COPY, list: [] },
+    {
+      title: "Shipping and returns",
+      body: (
+        <>
+          {SHIPPING_RETURNS.lead}
+          <a href={SUPPORT_MAILTO} className="text-paper underline underline-offset-2 hover:text-rust">
+            {SHIPPING_RETURNS.linkText}
+          </a>
+          {SHIPPING_RETURNS.tail}
+        </>
+      ),
+      list: [],
+    },
   ];
 
   const panelBg = color?.tone === "light" ? "bg-panel-light" : "bg-panel";
