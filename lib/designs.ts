@@ -16,6 +16,10 @@ export type StorefrontDesign = {
   name: string;
   /** One entry per blank, lead blank first. */
   products: StorefrontProduct[];
+  /** "Blank" when every entry shares the artwork; "Style" when the artwork differs too. */
+  picker: "Blank" | "Style";
+  /** Picker label for each entry in `products`. */
+  optionLabels: string[];
   priceMin: number;
   priceMax: number;
   cardSpec: string;
@@ -52,8 +56,27 @@ const DESIGN_NAMES: Record<string, string> = {
   "68ed6fc2ed926f86860dfb28": "The Scythe Tee",
 };
 
+/**
+ * Manual groups for products whose artwork doesn't match exactly, keyed by
+ * Printify product id. Same effect as a "group:<name>" tag, which wins.
+ */
+const DESIGN_GROUPS: Record<string, string> = {
+  // Pasadena caps: two colorways across two blanks, one page.
+  "6ae253dc0626d40cc4067419": "pasadena",
+  "6ae25fd78bbf35b5a6092b50": "pasadena",
+  "6ae25ef27ed91b7c4c02e206": "pasadena",
+};
+
+/** Style picker labels for designs that mix artwork, keyed by product id. */
+const STYLE_NAMES: Record<string, string> = {
+  "6ae253dc0626d40cc4067419": "Cardinal & Gold / Structured Cap",
+  "6ae25fd78bbf35b5a6092b50": "Cardinal & Gold / Nylon Surf Cap",
+  "6ae25ef27ed91b7c4c02e206": "Samueli Blue & Gold / Nylon Surf Cap",
+};
+
 function groupKey(p: StorefrontProduct): string {
-  if (p.groupTag) return `tag:${slugify(p.groupTag)}`;
+  const group = p.groupTag ?? DESIGN_GROUPS[p.id];
+  if (group) return `tag:${slugify(group)}`;
   // Same artwork on a cap and a tee stays two designs.
   if (p.artworkKey) return `art:${p.kind.one}:${p.artworkKey}`;
   return `id:${p.id}`;
@@ -94,12 +117,19 @@ export function groupDesigns(products: StorefrontProduct[]): StorefrontDesign[] 
       .sort((a, b) => blankRank(a.p) - blankRank(b.p) || a.i - b.i)
       .map(({ p }) => p);
 
-    // Two products on the same blank still need distinct ?blank= values.
+    const picker = new Set(ordered.map((p) => p.artworkKey)).size > 1 ? "Style" : "Blank";
+    const optionLabels = ordered.map((p) =>
+      picker === "Blank" ? p.blankLabel : (STYLE_NAMES[p.id] ?? `${p.title} / ${p.blankLabel}`),
+    );
+
+    // Styles key the URL by their label; two products on one blank still need distinct ?blank= values.
     const seenKeys = new Map<string, number>();
-    const blanks = ordered.map((p) => {
-      const n = (seenKeys.get(p.blankKey) ?? 0) + 1;
-      seenKeys.set(p.blankKey, n);
-      return n === 1 ? p : { ...p, blankKey: `${p.blankKey}-${n}` };
+    const blanks = ordered.map((p, i) => {
+      const base = picker === "Style" ? slugify(optionLabels[i]) || p.blankKey : p.blankKey;
+      const n = (seenKeys.get(base) ?? 0) + 1;
+      seenKeys.set(base, n);
+      const blankKey = n === 1 ? base : `${base}-${n}`;
+      return blankKey === p.blankKey ? p : { ...p, blankKey };
     });
 
     const name = designName(blanks);
@@ -113,9 +143,11 @@ export function groupDesigns(products: StorefrontProduct[]): StorefrontDesign[] 
       slug,
       name,
       products: blanks,
+      picker,
+      optionLabels,
       priceMin: Math.min(...blanks.map((p) => p.priceMin)),
       priceMax: Math.max(...blanks.map((p) => p.priceMax)),
-      cardSpec: blanks.length > 1 ? `${lead.kind.one} / ${blanks.length} Blanks` : lead.cardSpec,
+      cardSpec: blanks.length > 1 ? `${lead.kind.one} / ${blanks.length} ${picker}s` : lead.cardSpec,
       updatedAt: blanks.reduce((max, p) => (p.updatedAt > max ? p.updatedAt : max), lead.updatedAt),
     });
   }

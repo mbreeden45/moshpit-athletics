@@ -49,8 +49,12 @@ Never commit `.env.local`.
   library rather than uploading it again). Printify tags override this:
   `group:<anything>` merges products that share the tag and keeps them apart
   from untagged ones, and `name:<Design Name>` sets the storefront name.
-  Without a tag, names come from the `DESIGN_NAMES` map, then the product
-  title. Shaka Wear leads, then Comfort Colors, then the rest.
+  The same can be set in code with the `DESIGN_GROUPS` map. Without a tag,
+  names come from the `DESIGN_NAMES` map, then the product
+  title. Shaka Wear leads, then Comfort Colors, then the rest. When a group mixes
+  artwork (the Pasadena caps), the picker becomes a Style dropdown labelled from
+  `STYLE_NAMES`, and each style's own description text (whatever isn't the
+  blank's stock Printify copy) shows under the title and swaps with the pick.
 - **SEO**: each PDP has `generateMetadata` (canonical URL, OG/Twitter
   cards, price meta) plus `Product` and `BreadcrumbList` JSON-LD. There's
   `app/sitemap.ts` (with image entries) and `app/robots.ts`, which blocks

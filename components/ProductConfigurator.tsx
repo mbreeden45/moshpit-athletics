@@ -111,14 +111,19 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
     }
   }
 
+  // Style designs swap each style's own story in under the title; the Details panel keeps the stock copy.
+  const showStory = design.picker === "Style" && product.story.length > 0;
+  const details = showStory
+    ? product.details
+    : { paragraphs: product.descriptionParagraphs, bullets: product.descriptionBullets };
+
   const panels: { title: string; body: ReactNode; list: string[] }[] = [
     {
       title: product.isGarment ? "Garment specs" : "Details",
       body: blank
         ? `${blank.fabric}, ${blank.weight}. ${blank.collar}. ${blank.cut}. Printed to order in the USA.`
-        : product.descriptionParagraphs.slice(0, 3).join(" ") ||
-          "Printed to order in the USA.",
-      list: blank ? [] : product.descriptionBullets.slice(0, 8),
+        : details.paragraphs.slice(0, 3).join(" ") || "Printed to order in the USA.",
+      list: blank ? [] : details.bullets.slice(0, 8),
     },
     ...(product.isGarment ? [{ title: "Care", body: CARE_COPY, list: [] }] : []),
     {
@@ -174,11 +179,43 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
             <Heading className="headline-xl text-[clamp(56px,6vw,96px)] leading-[0.88]">{design.name}</Heading>
             {product.subtitle && <p className="label mt-4 normal-case">{product.subtitle}</p>}
           </div>
+          {showStory && (
+            <div className="prose-body flex max-w-[520px] flex-col gap-2 text-body" aria-live="polite">
+              {product.story.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+            </div>
+          )}
           <p className="text-[24px]" aria-live="polite">
             {priceLabel}
           </p>
 
-          {design.products.length > 1 && (
+          {design.products.length > 1 && design.picker === "Style" && (
+            <div>
+              <label htmlFor={`${design.key}-style`} className="mb-2.5 block uppercase">
+                Style
+              </label>
+              <div className="relative">
+                <select
+                  id={`${design.key}-style`}
+                  value={blankIndex}
+                  onChange={(e) => selectBlank(Number(e.target.value))}
+                  className="w-full cursor-pointer appearance-none border border-paper bg-ink px-4 py-3.5 pr-10 text-[13px] text-paper hover:border-muted"
+                >
+                  {design.products.map((p, i) => (
+                    <option key={p.id} value={i}>
+                      {`${design.optionLabels[i]} — ${p.priceMin !== p.priceMax ? "From " : ""}${formatPrice(p.priceMin)}`}
+                    </option>
+                  ))}
+                </select>
+                <span aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
+                  ▾
+                </span>
+              </div>
+            </div>
+          )}
+
+          {design.products.length > 1 && design.picker === "Blank" && (
             <fieldset>
               <legend className="mb-2.5 uppercase">Blank: {product.blankLabel}</legend>
               <div className="flex flex-col gap-2">
@@ -194,7 +231,7 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
                         selected ? "border-paper bg-paper text-ink" : "border-edge hover:border-muted"
                       }`}
                     >
-                      <span>{p.blankLabel}</span>
+                      <span>{design.optionLabels[i]}</span>
                       <span className="shrink-0">
                         {p.priceMin !== p.priceMax && "From "}
                         {formatPrice(p.priceMin)}

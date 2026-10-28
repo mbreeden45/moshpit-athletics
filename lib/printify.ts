@@ -67,6 +67,7 @@ export type PrintifyBlueprint = {
   title: string;
   brand: string;
   model: string;
+  description: string;
 };
 
 export type PrintifyProduct = {
@@ -223,10 +224,10 @@ export async function getProduct(productId: string): Promise<PrintifyProduct | n
 export async function getBlueprint(blueprintId: number): Promise<PrintifyBlueprint | null> {
   if (!env.printifyToken) return null;
   try {
-    const { id, title, brand, model } = await printifyFetch<PrintifyBlueprint>(
+    const { id, title, brand, model, description } = await printifyFetch<PrintifyBlueprint>(
       `/catalog/blueprints/${blueprintId}.json`,
     );
-    return { id, title, brand, model };
+    return { id, title, brand, model, description: description ?? "" };
   } catch (err) {
     console.warn(`[printify] Blueprint ${blueprintId} lookup failed:`, err);
     return null;
