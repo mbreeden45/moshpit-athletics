@@ -1,4 +1,4 @@
-import type { PrintifyProduct } from "./printify";
+import type { PrintifyBlueprint, PrintifyProduct } from "./printify";
 import { getBlankSpec, type BlankSpec } from "./blanks";
 import { POPUP_URL } from "./site";
 
@@ -35,10 +35,24 @@ export type StorefrontProduct = {
   fullTitle: string;
   descriptionParagraphs: string[];
   descriptionBullets: string[];
+  /** The seller's own words: description paragraphs that aren't the blank's stock copy. */
+  story: string[];
+  /** Stock product copy for the Details panel (falls back to the blueprint's). */
+  details: { paragraphs: string[]; bullets: string[] };
   summary: string;
   tags: string[];
   blueprintId: number;
   blank: BlankSpec | null;
+  /** Blank name shown in the design's blank picker, e.g. "American Apparel Classic Tee". */
+  blankLabel: string;
+  /** URL-safe blank id for ?blank=, e.g. "american-apparel-1301". */
+  blankKey: string;
+  /** Uploaded artwork ids, sorted; identical sets mean the same design on another blank. */
+  artworkKey: string;
+  /** Value of a "group:<name>" Printify tag, which overrides artwork matching. */
+  groupTag: string | null;
+  /** Value of a "name:<Design Name>" Printify tag. */
+  nameTag: string | null;
   /** Sized like clothing (S/M/L…) — gates fit copy and the print profile. */
   isGarment: boolean;
   /** Category label, e.g. { one: "Tee", many: "Tees" }. */
@@ -135,6 +149,7 @@ function decodeEntities(s: string): string {
 export function parseDescription(html: string): { paragraphs: string[]; bullets: string[] } {
   const text = decodeEntities(
     html
+      .replace(/<\s*li\b[^>]*>/gi, "\n.: ")
       .replace(/<\s*(br|\/p|\/li|\/div|\/h\d|\/tr)\s*\/?>/gi, "\n")
       .replace(/<[^>]+>/g, " "),
   ).replace(/\s*\.:\s*/g, "\n.: "); // Printify inlines ".:" bullets mid-line
@@ -209,7 +224,7 @@ export function getPopupProductUrl(p: Pick<PrintifyProduct, "external">): string
 
 const POSTER_BLUEPRINTS = new Set([282]); // Matte vertical posters
 
-function productKind(p: PrintifyProduct, hasBlank: boolean): ProductKind {
+function productKind(p: PrintifyProduct, hasBlank: boolean, bp: PrintifyBlueprint | null): ProductKind {
   const tags = (p.tags ?? []).map((t) => t.toLowerCase());
   const has = (...keys: string[]) => keys.some((k) => tags.includes(k));
   if (hasBlank) return { one: "Tee", many: "Tees" };
@@ -219,12 +234,75 @@ function productKind(p: PrintifyProduct, hasBlank: boolean): ProductKind {
   if (has("hats")) return { one: "Cap", many: "Headwear" };
   if (has("pet", "pets")) return { one: "Pet Goods", many: "Pet Goods" };
   if (has("t-shirts", "crop tops", "crew neck")) return { one: "Tee", many: "Tees" };
+  // Untagged products: go by the blank's catalog title.
+  const bpTitle = bp?.title ?? "";
+  if (/hood/i.test(bpTitle)) return { one: "Hoodie", many: "Hoodies" };
+  if (/sweatshirt|crewneck/i.test(bpTitle)) return { one: "Crewneck", many: "Crewnecks" };
+  if (/\b(cap|hat|beanie)\b/i.test(bpTitle)) return { one: "Cap", many: "Headwear" };
+  if (/\b(tee|t-shirt|short sleeve)\b/i.test(bpTitle)) return { one: "Tee", many: "Tees" };
   return { one: "Goods", many: "Goods" };
 }
 
 const GARMENT_SIZE = /^(XXS|XS|S|M|L|XL|XXL|\d?XL)$/i;
 
-export function toStorefrontProduct(p: PrintifyProduct): StorefrontProduct {
+// Storefront control tags set in Printify: "group:ernie", "name:The Ernie Tee".
+const CONTROL_TAG = /^(group|name)\s*:\s*(.+)$/i;
+
+function controlTag(tags: string[], key: "group" | "name"): string | null {
+  for (const t of tags) {
+    const m = CONTROL_TAG.exec(t.trim());
+    if (m && m[1].toLowerCase() === key) return m[2].trim();
+  }
+  return null;
+}
+
+// Printify's built-in text layer shares one image id across every product.
+const TEXT_LAYER = /^text_layer/i;
+
+function artworkKey(p: PrintifyProduct): string {
+  const ids = new Set<string>();
+  for (const area of p.print_areas ?? []) {
+    for (const ph of area.placeholders) {
+      for (const img of ph.images) if (!TEXT_LAYER.test(img.name ?? "")) ids.add(img.id);
+    }
+  }
+  return [...ids].sort().join(",");
+}
+
+const normText = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
+
+/** Split a description into the seller's story and the blank's stock copy. */
+function splitStory(
+  own: { paragraphs: string[]; bullets: string[] },
+  bp: PrintifyBlueprint | null,
+): { story: string[]; details: { paragraphs: string[]; bullets: string[] } } {
+  const stock = bp ? parseDescription(bp.description) : { paragraphs: [], bullets: [] };
+  const stockText = new Set([...stock.paragraphs, ...stock.bullets].map(normText));
+  const isStock = (line: string) => stockText.has(normText(line));
+  const story = own.paragraphs.filter((l) => !isStock(l));
+  const paragraphs = own.paragraphs.filter(isStock);
+  return {
+    story,
+    details: {
+      paragraphs: paragraphs.length ? paragraphs : stock.paragraphs,
+      bullets: own.bullets.length ? own.bullets : stock.bullets,
+    },
+  };
+}
+
+const stripMarks = (s: string) => s.replace(/[®™]/g, "").replace(/\s+/g, " ").trim();
+
+/** "Comfort Colors 1717", "American Apparel Classic Tee", … */
+function blankLabel(blank: BlankSpec | null, bp: PrintifyBlueprint | null, kind: ProductKind): string {
+  if (blank) return blank.name;
+  if (!bp) return kind.one;
+  const brand = stripMarks(bp.brand);
+  const title = stripMarks(bp.title).replace(/^unisex\s+/i, "");
+  if (!brand || /^generic/i.test(brand)) return title;
+  return title.toLowerCase().startsWith(brand.toLowerCase()) ? title : `${brand} ${title}`;
+}
+
+export function toStorefrontProduct(p: PrintifyProduct, blueprint: PrintifyBlueprint | null = null): StorefrontProduct {
   const { title, subtitle } = splitTitle(p.title);
   const { paragraphs, bullets } = parseDescription(p.description || "");
 
@@ -262,7 +340,8 @@ export function toStorefrontProduct(p: PrintifyProduct): StorefrontProduct {
 
   const isGarment = sizes.some((s) => GARMENT_SIZE.test(s.name.trim()));
   const blank = getBlankSpec(p.blueprint_id);
-  const kind = productKind(p, blank !== null);
+  const kind = productKind(p, blank !== null, blueprint);
+  const { story, details } = splitStory({ paragraphs, bullets }, blueprint);
   const cardSpec =
     blank?.cardSpec ??
     [kind.one, colors.length > 1 ? `${colors.length} Colorways` : "Made to Order"].join(" / ");
@@ -290,10 +369,18 @@ export function toStorefrontProduct(p: PrintifyProduct): StorefrontProduct {
     fullTitle: p.title.replace(/\s+/g, " ").trim(),
     descriptionParagraphs: paragraphs,
     descriptionBullets: bullets,
+    story,
+    details,
     summary: truncate(summarySource, 155),
-    tags: p.tags ?? [],
+    tags: (p.tags ?? []).filter((t) => !CONTROL_TAG.test(t.trim())),
     blueprintId: p.blueprint_id,
     blank,
+    blankLabel: blankLabel(blank, blueprint, kind),
+    blankKey:
+      slugify(blueprint ? `${stripMarks(blueprint.brand)} ${blueprint.model}` : "") || `blank-${p.blueprint_id}`,
+    artworkKey: artworkKey(p),
+    groupTag: controlTag(p.tags ?? [], "group"),
+    nameTag: controlTag(p.tags ?? [], "name"),
     isGarment,
     kind,
     cardSpec,

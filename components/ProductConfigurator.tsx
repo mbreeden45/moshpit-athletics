@@ -1,11 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { getMeasurement } from "@/lib/blanks";
 import { CARE_COPY, CHECKOUT_NOTE, FIT_COPY, SHIPPING_RETURNS, TOP_BANNER } from "@/lib/copy";
+import type { StorefrontDesign } from "@/lib/designs";
 import { formatPrice, type ProductImage, type StorefrontProduct } from "@/lib/product";
 import { SUPPORT_MAILTO } from "@/lib/site";
+import { GarmentBlueprint } from "./GarmentBlueprint";
 import { PrintProfile } from "./PrintProfile";
 
 const POSITION_ORDER = ["front", "back", "folded", "left_sleeve", "right_sleeve", "other"];
@@ -24,29 +26,47 @@ function positionLabel(p: string): string {
   return p.replace(/_/g, " ");
 }
 
+/** The colour shown in the product's default mockup. */
+function initialColorId(product: StorefrontProduct): number | null {
+  const def = product.images.find((i) => i.isDefault);
+  if (def) {
+    const v = product.variants.find((v) => def.variantIds.includes(v.id));
+    if (v?.colorId != null) return v.colorId;
+  }
+  return product.colors[0]?.id ?? null;
+}
+
+const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
 type Props = {
-  product: StorefrontProduct;
+  design: StorefrontDesign;
   /** h1 on the PDP, h2 when featured on the home page. */
   as?: "h1" | "h2";
-  /** Fixed mobile buy bar (PDP only). */
+  /** PDP only: fixed mobile buy bar and ?blank= kept in the URL. */
   stickyBar?: boolean;
+  /** Anchor id for the garment blueprint section. */
+  blueprintId?: string;
 };
 
-export function ProductConfigurator({ product, as: Heading = "h1", stickyBar = false }: Props) {
+export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = false, blueprintId }: Props) {
+  const [blankIndex, setBlankIndex] = useState(0);
+  const product = design.products[blankIndex] ?? design.products[0];
   const { colors, sizes, variants, blank } = product;
 
-  const initialColorId = useMemo(() => {
-    const def = product.images.find((i) => i.isDefault);
-    if (def) {
-      const v = variants.find((v) => def.variantIds.includes(v.id));
-      if (v?.colorId != null) return v.colorId;
-    }
-    return colors[0]?.id ?? null;
-  }, [product.images, variants, colors]);
-
-  const [colorId, setColorId] = useState<number | null>(initialColorId);
+  const [colorId, setColorId] = useState<number | null>(() => initialColorId(product));
   const [sizeId, setSizeId] = useState<number | null>(null);
   const [openPanel, setOpenPanel] = useState(0);
+
+  // Old per-product links land here with ?blank=<key>.
+  useEffect(() => {
+    if (!stickyBar || design.products.length < 2) return;
+    const key = new URLSearchParams(window.location.search).get("blank");
+    const i = design.products.findIndex((p) => p.blankKey === key);
+    if (i > 0) {
+      setBlankIndex(i);
+      setColorId(initialColorId(design.products[i]));
+    }
+  }, [design, stickyBar]);
 
   const color = colors.find((c) => c.id === colorId) ?? null;
   const size = sizes.find((s) => s.id === sizeId) ?? null;
@@ -65,6 +85,25 @@ export function ProductConfigurator({ product, as: Heading = "h1", stickyBar = f
   const fromPrefix = !selectedVariant && colorVariants.some((v) => v.price !== price) ? "From " : "";
   const priceLabel = `${fromPrefix}${formatPrice(price, true)}`;
 
+  /** Switch blanks, carrying over the colour and size names where the new blank has them. */
+  function selectBlank(i: number) {
+    const next = design.products[i];
+    if (!next || i === blankIndex) return;
+    const nextColor = (color && next.colors.find((c) => sameName(c.name, color.name))?.id) ?? initialColorId(next);
+    const nextSize = size ? next.sizes.find((s) => sameName(s.name, size.name)) : undefined;
+    const sizeOk =
+      nextSize && next.variants.some((v) => v.colorId === nextColor && v.sizeId === nextSize.id && v.available);
+    setBlankIndex(i);
+    setColorId(nextColor);
+    setSizeId(sizeOk ? nextSize.id : null);
+    if (stickyBar) {
+      const url = new URL(window.location.href);
+      if (i === 0) url.searchParams.delete("blank");
+      else url.searchParams.set("blank", next.blankKey);
+      window.history.replaceState(window.history.state, "", url);
+    }
+  }
+
   function selectColor(id: number) {
     setColorId(id);
     if (sizeId != null && !variants.some((v) => v.colorId === id && v.sizeId === sizeId && v.available)) {
@@ -72,14 +111,19 @@ export function ProductConfigurator({ product, as: Heading = "h1", stickyBar = f
     }
   }
 
+  // Style designs swap each style's own story in under the title; the Details panel keeps the stock copy.
+  const showStory = design.picker === "Style" && product.story.length > 0;
+  const details = showStory
+    ? product.details
+    : { paragraphs: product.descriptionParagraphs, bullets: product.descriptionBullets };
+
   const panels: { title: string; body: ReactNode; list: string[] }[] = [
     {
       title: product.isGarment ? "Garment specs" : "Details",
       body: blank
         ? `${blank.fabric}, ${blank.weight}. ${blank.collar}. ${blank.cut}. Printed to order in the USA.`
-        : product.descriptionParagraphs.slice(0, 3).join(" ") ||
-          "Printed to order in the USA.",
-      list: blank ? [] : product.descriptionBullets.slice(0, 8),
+        : details.paragraphs.slice(0, 3).join(" ") || "Printed to order in the USA.",
+      list: blank ? [] : details.bullets.slice(0, 8),
     },
     ...(product.isGarment ? [{ title: "Care", body: CARE_COPY, list: [] }] : []),
     {
@@ -106,7 +150,7 @@ export function ProductConfigurator({ product, as: Heading = "h1", stickyBar = f
         <div className="grid flex-[1_1_560px] grid-cols-2 gap-px bg-line">
           {gallery.length === 0 && (
             <div className={`col-span-2 flex aspect-[1/1.1] items-end p-5 label ${panelBg} text-placeholder`}>
-              Photo: {product.title}
+              Photo: {design.name}
             </div>
           )}
           {gallery.map((img, i) => (
@@ -116,7 +160,7 @@ export function ProductConfigurator({ product, as: Heading = "h1", stickyBar = f
             >
               <Image
                 src={img.src}
-                alt={`${product.title}${color ? `, ${color.name}` : ""} — ${positionLabel(img.position)}`}
+                alt={`${design.name}${color ? `, ${color.name}` : ""} — ${positionLabel(img.position)}`}
                 fill
                 priority={i === 0}
                 sizes={i === 0 ? "(min-width: 1000px) 57vw, 100vw" : "(min-width: 1000px) 28vw, 50vw"}
@@ -132,12 +176,72 @@ export function ProductConfigurator({ product, as: Heading = "h1", stickyBar = f
             {DROP_LABEL} / {product.kind.many}
           </p>
           <div>
-            <Heading className="headline-xl text-[clamp(56px,6vw,96px)] leading-[0.88]">{product.title}</Heading>
+            <Heading className="headline-xl text-[clamp(56px,6vw,96px)] leading-[0.88]">{design.name}</Heading>
             {product.subtitle && <p className="label mt-4 normal-case">{product.subtitle}</p>}
           </div>
+          {showStory && (
+            <div className="prose-body flex max-w-[520px] flex-col gap-2 text-body" aria-live="polite">
+              {product.story.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+            </div>
+          )}
           <p className="text-[24px]" aria-live="polite">
             {priceLabel}
           </p>
+
+          {design.products.length > 1 && design.picker === "Style" && (
+            <div>
+              <label htmlFor={`${design.key}-style`} className="mb-2.5 block uppercase">
+                Style
+              </label>
+              <div className="relative">
+                <select
+                  id={`${design.key}-style`}
+                  value={blankIndex}
+                  onChange={(e) => selectBlank(Number(e.target.value))}
+                  className="w-full cursor-pointer appearance-none border border-paper bg-ink px-4 py-3.5 pr-10 text-[13px] text-paper hover:border-muted"
+                >
+                  {design.products.map((p, i) => (
+                    <option key={p.id} value={i}>
+                      {`${design.optionLabels[i]} — ${p.priceMin !== p.priceMax ? "From " : ""}${formatPrice(p.priceMin)}`}
+                    </option>
+                  ))}
+                </select>
+                <span aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
+                  ▾
+                </span>
+              </div>
+            </div>
+          )}
+
+          {design.products.length > 1 && design.picker === "Blank" && (
+            <fieldset>
+              <legend className="mb-2.5 uppercase">Blank: {product.blankLabel}</legend>
+              <div className="flex flex-col gap-2">
+                {design.products.map((p, i) => {
+                  const selected = i === blankIndex;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => selectBlank(i)}
+                      aria-pressed={selected}
+                      className={`flex cursor-pointer justify-between gap-4 border px-4 py-3.5 text-left text-[13px] ${
+                        selected ? "border-paper bg-paper text-ink" : "border-edge hover:border-muted"
+                      }`}
+                    >
+                      <span>{design.optionLabels[i]}</span>
+                      <span className="shrink-0">
+                        {p.priceMin !== p.priceMax && "From "}
+                        {formatPrice(p.priceMin)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+          )}
 
           {colors.length > 1 && (
             <fieldset>
@@ -249,6 +353,8 @@ export function ProductConfigurator({ product, as: Heading = "h1", stickyBar = f
           </div>
         </div>
       </section>
+
+      {blank && <GarmentBlueprint blank={blank} id={blueprintId} />}
 
       {stickyBar && (
         <div className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-[1fr_1.4fr] border-t border-paper bg-ink md:hidden">

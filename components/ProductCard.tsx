@@ -1,11 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
-import { formatPrice, type StorefrontProduct } from "@/lib/product";
+import type { StorefrontDesign } from "@/lib/designs";
+import { formatPrice } from "@/lib/product";
 
 const PILL_SIZES = 5;
 
-export function ProductCard({ product, priority }: { product: StorefrontProduct; priority?: boolean }) {
-  const href = `/products/${product.slug}`;
+export function ProductCard({ design, priority }: { design: StorefrontDesign; priority?: boolean }) {
+  const product = design.products[0];
+  const href = `/products/${design.slug}`;
   const light = product.colors[0]?.tone === "light";
   // Quick-buy size pills; each routes to this item on the Pop-Up store.
   const pills = product.isGarment ? product.sizes.slice(0, PILL_SIZES) : [];
@@ -15,7 +17,7 @@ export function ProductCard({ product, priority }: { product: StorefrontProduct;
       <div
         className={`relative aspect-[4/5] overflow-hidden ${light ? "bg-panel-light" : "bg-panel"}`}
       >
-        <Link href={href} className="absolute inset-0" aria-label={product.title}>
+        <Link href={href} className="absolute inset-0" aria-label={design.name}>
           {product.defaultImage ? (
             <Image
               src={product.defaultImage}
@@ -26,7 +28,7 @@ export function ProductCard({ product, priority }: { product: StorefrontProduct;
               className="object-cover"
             />
           ) : (
-            <span className="label absolute bottom-3 left-3 text-placeholder">Photo: {product.title}</span>
+            <span className="label absolute bottom-3 left-3 text-placeholder">Photo: {design.name}</span>
           )}
         </Link>
         {pills.length > 0 && (
@@ -35,7 +37,7 @@ export function ProductCard({ product, priority }: { product: StorefrontProduct;
               <a
                 key={s.id}
                 href={product.popupUrl}
-                aria-label={`Buy ${product.title} in ${s.name}`}
+                aria-label={`Buy ${design.name} in ${s.name}`}
                 className="border border-paper bg-ink px-[9px] py-1.5 text-[11px] text-paper hover:bg-paper hover:text-ink"
               >
                 {s.name}
@@ -48,15 +50,15 @@ export function ProductCard({ product, priority }: { product: StorefrontProduct;
       <div className="flex justify-between gap-3 font-display text-[19px] font-bold uppercase leading-[1.1] tracking-normal [font-stretch:80%]">
         <h3>
           <Link href={href} className="hover:text-rust">
-            {product.title}
+            {design.name}
           </Link>
         </h3>
         <span className="shrink-0 font-mono text-[13px] font-normal">
-          {product.priceMin !== product.priceMax && <span className="text-muted">From </span>}
-          {formatPrice(product.priceMin)}
+          {design.priceMin !== design.priceMax && <span className="text-muted">From </span>}
+          {formatPrice(design.priceMin)}
         </span>
       </div>
-      <p className="label -mt-1.5">{product.cardSpec}</p>
+      <p className="label -mt-1.5">{design.cardSpec}</p>
     </article>
   );
 }
