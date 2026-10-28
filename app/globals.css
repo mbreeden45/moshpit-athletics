@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./dialup.css";
 
 /* Tokens from Claude Design "Mosh Pit Athletics v2" */
 @theme {

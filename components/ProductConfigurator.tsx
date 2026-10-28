@@ -352,14 +352,14 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
             <button
               type="button"
               onClick={addToCart}
-              className="cursor-pointer border border-paper bg-paper p-5 text-center text-[14px] font-medium uppercase tracking-[0.06em] text-ink hover:border-rust hover:bg-rust hover:text-paper"
+              className="mpa-buy cursor-pointer border border-paper bg-paper p-5 text-center text-[14px] font-medium uppercase tracking-[0.06em] text-ink hover:border-rust hover:bg-rust hover:text-paper"
             >
               Add to cart / {formatPrice(price, true)}
             </button>
             <button
               type="button"
               onClick={buyItNow}
-              className="cursor-pointer border border-paper bg-black p-[18px] text-center text-[14px] font-medium hover:bg-panel"
+              className="mpa-buy cursor-pointer border border-paper bg-black p-[18px] text-center text-[14px] font-medium hover:bg-panel"
             >
               Buy now
             </button>

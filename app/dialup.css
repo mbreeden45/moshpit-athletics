@@ -1,0 +1,609 @@
+/*
+ * Dial-Up Edition: the whole site as a 1999 Angelfire homepage.
+ * Everything here is scoped to html[data-era="dialup"] (set by ERA_SCRIPT in
+ * the layout), so the normal site only ever sees the first block.
+ */
+
+/* ---------- Normal site: frame is transparent, decorations hidden ---------- */
+.site-frame,
+.site-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+.dialup-only {
+  display: none !important;
+}
+
+/* ---------- Tokens: re-point the design system ---------- */
+html[data-era="dialup"] {
+  color-scheme: light;
+  --color-ink: #ffffff;
+  --color-paper: #000000;
+  --color-muted: #555555;
+  --color-body: #000000;
+  --color-line: #808080;
+  --color-edge: #000000;
+  --color-rust: #ff0000;
+  --color-panel: #ffffff;
+  --color-panel-2: #eeeeee;
+  --color-panel-light: #ffffff;
+  --color-placeholder: #777777;
+  --font-display: var(--font-silkscreen), "Courier New", monospace;
+  --font-mono: "Times New Roman", Times, serif;
+  --dialup-gray: #c0c0c0;
+}
+
+html[data-era="dialup"] .dialup-only {
+  display: revert !important;
+}
+html[data-era="dialup"] .dialup-banner.dialup-only,
+html[data-era="dialup"] .dialup-sidebar.dialup-only {
+  display: flex !important;
+}
+html[data-era="dialup"] .dialup-hide,
+html[data-era="dialup"] .site-header {
+  display: none !important;
+}
+
+/* Starfield + flame-gradient wallpaper, tiled like it's 1999 */
+html[data-era="dialup"] body {
+  background-color: #000018;
+  background-image:
+    radial-gradient(1px 1px at 12px 18px, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 47px 64px, #ffff66 50%, transparent 51%),
+    radial-gradient(1.5px 1.5px at 81px 30px, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 23px 92px, #66ffff 50%, transparent 51%),
+    radial-gradient(1px 1px at 96px 88px, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 64px 8px, #ff66ff 50%, transparent 51%);
+  background-size: 110px 110px;
+  color: #000;
+  font-size: 15px;
+  letter-spacing: 0;
+  cursor: crosshair;
+}
+html[data-era="dialup"] a {
+  color: #0000ee;
+  text-decoration: underline;
+}
+html[data-era="dialup"] a:visited {
+  color: #551a8b;
+}
+html[data-era="dialup"] ::selection {
+  background: #ff00ff;
+  color: #ffff00;
+}
+
+/* ---------- Frame: banner on top, sidebar left, content right ---------- */
+html[data-era="dialup"] .site-frame {
+  display: grid;
+  grid-template-areas: "banner banner" "side content";
+  grid-template-columns: 170px minmax(0, 1fr);
+  width: min(980px, 100%);
+  margin: 12px auto;
+  border: 4px outset #dfdfdf;
+  background: var(--dialup-gray);
+}
+html[data-era="dialup"] .site-content {
+  grid-area: content;
+  min-width: 0;
+  margin: 8px;
+  border: 3px inset #dfdfdf;
+  background: #ffffff;
+}
+
+.dialup-banner {
+  grid-area: banner;
+  position: relative;
+  gap: 12px;
+  align-items: stretch;
+  padding: 10px;
+  background: linear-gradient(180deg, #000080, #1084d0);
+  border-bottom: 4px ridge #ffcc00;
+}
+.dialup-photo {
+  position: relative;
+  flex: 0 0 140px;
+  height: 140px;
+  border: 4px ridge #ffffff;
+  background: #000;
+  overflow: hidden;
+}
+.dialup-banner-main {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+}
+.dialup-strip {
+  position: absolute;
+  inset: 0 0 0 auto;
+  display: flex;
+  gap: 6px;
+  opacity: 0.35;
+}
+.dialup-strip-cell {
+  position: relative;
+  width: 110px;
+  height: 100%;
+}
+html[data-era="dialup"] a.dialup-wordart,
+.dialup-wordart {
+  position: relative;
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: clamp(30px, 5.4vw, 58px);
+  font-style: italic;
+  text-transform: uppercase;
+  text-decoration: none;
+  line-height: 1;
+  color: transparent;
+  background: linear-gradient(180deg, #ffffff 0%, #c8c8c8 38%, #5a5a5a 52%, #e8e8e8 62%, #9a9a9a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: 1px #000;
+  filter: drop-shadow(3px 3px 0 #ff00ff) drop-shadow(-1px -1px 0 #00ffff);
+  transform: skewX(-8deg);
+}
+.dialup-tagline {
+  position: relative;
+  margin: 4px 0 0;
+  font-family: "Comic Sans MS", "Comic Neue", cursive;
+  color: #ffff00;
+  font-size: 14px;
+}
+.dialup-flames {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 22px;
+  background:
+    radial-gradient(ellipse 10px 22px at 10px 100%, #ffcc00 40%, transparent 41%),
+    radial-gradient(ellipse 8px 16px at 22px 100%, #ff3300 45%, transparent 46%);
+  background-size: 24px 22px;
+  animation: dialup-flicker 0.4s steps(2) infinite;
+}
+
+/* ---------- Sidebar ---------- */
+.dialup-sidebar {
+  grid-area: side;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 10px;
+  background:
+    repeating-linear-gradient(45deg, transparent 0 8px, rgba(255, 255, 255, 0.25) 8px 10px),
+    var(--dialup-gray);
+  font-family: "Comic Sans MS", "Comic Neue", cursive;
+}
+.dialup-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+html[data-era="dialup"] .dialup-pill,
+html[data-era="dialup"] .dialup-pill button {
+  display: block;
+  padding: 7px 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #444 0%, #000 60%);
+  border: 2px outset #888;
+  color: #fff;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  font-size: 14px;
+  text-align: center;
+  text-transform: uppercase;
+  text-decoration: none;
+  width: 100%;
+}
+html[data-era="dialup"] .dialup-pill:hover,
+html[data-era="dialup"] .dialup-pill button:hover {
+  background: linear-gradient(180deg, #ff3333 0%, #990000 60%);
+}
+html[data-era="dialup"] .dialup-pill-bag {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.dialup-box {
+  padding: 6px;
+  border: 2px inset #dfdfdf;
+  background: #000;
+  color: #00ff00;
+  text-align: center;
+}
+.dialup-small {
+  font-size: 11px;
+  line-height: 1.3;
+}
+.dialup-counter {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+  margin: 4px 0 0;
+}
+.dialup-counter span {
+  padding: 1px 3px;
+  background: #222;
+  border: 1px solid #555;
+  color: #ff2222;
+  font-family: "Courier New", monospace;
+  font-size: 18px;
+  font-weight: bold;
+}
+.dialup-construction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
+  border: 3px solid #000;
+  background: repeating-linear-gradient(-45deg, #ffcc00 0 10px, #000 10px 20px);
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+.dialup-construction span {
+  padding: 0 4px;
+  background: #ffcc00;
+  color: #000;
+}
+.dialup-construction span:last-child {
+  animation: dialup-blink 1s steps(1) infinite;
+}
+html[data-era="dialup"] a.dialup-exit {
+  padding: 6px;
+  border: 2px outset #dfdfdf;
+  background: #ffff00;
+  color: #000;
+  font-weight: bold;
+  font-size: 12px;
+  text-align: center;
+  text-decoration: none;
+}
+
+/* ---------- Marquee ---------- */
+.dialup-marquee {
+  overflow: hidden;
+  padding: 4px 0;
+  background: #000;
+  border-bottom: 3px ridge #ff00ff;
+  color: #00ff00;
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  white-space: nowrap;
+}
+.dialup-marquee-track {
+  display: inline-flex;
+  animation: dialup-marquee 40s linear infinite;
+}
+.dialup-marquee-track span {
+  white-space: pre;
+}
+
+/* ---------- Page content ---------- */
+html[data-era="dialup"] main section,
+html[data-era="dialup"] .mpa-hero {
+  border-color: #808080 !important;
+}
+html[data-era="dialup"] .mpa-hero h1 {
+  font-family: Impact, "Arial Black", sans-serif;
+  font-stretch: normal;
+  font-style: italic;
+  font-size: clamp(44px, 8vw, 96px) !important;
+  color: #ff00ff;
+  text-shadow: 3px 3px 0 #00ffff, 6px 6px 0 #000;
+}
+html[data-era="dialup"] .mpa-hero h1 span {
+  color: #0000ee;
+}
+html[data-era="dialup"] .headline,
+html[data-era="dialup"] .headline-xl {
+  font-family: var(--font-silkscreen), "Courier New", monospace;
+  font-stretch: normal;
+  letter-spacing: 0;
+}
+html[data-era="dialup"] h2.headline {
+  color: #800080;
+  text-decoration: underline wavy #ff00ff;
+}
+html[data-era="dialup"] .label {
+  font-family: "Comic Sans MS", "Comic Neue", cursive;
+  text-transform: none;
+}
+html[data-era="dialup"] .prose-body {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 15px;
+}
+
+/* Big call-to-action links: beveled buttons */
+html[data-era="dialup"] .mpa-hero a {
+  border: 3px outset #dfdfdf;
+  background: linear-gradient(180deg, #33ff33, #009900);
+  color: #fff;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  text-decoration: none;
+  text-shadow: 1px 1px 0 #000;
+}
+html[data-era="dialup"] .mpa-hero a:active {
+  border-style: inset;
+}
+
+/* Catalog grid: a bordered table */
+html[data-era="dialup"] #collection > div:last-child {
+  border: 3px outset #dfdfdf;
+  background: #808080;
+  gap: 4px;
+  padding: 4px;
+}
+html[data-era="dialup"] .mpa-card {
+  position: relative;
+  border: 3px ridge #c0c0c0;
+  background: #ffffcc;
+}
+html[data-era="dialup"] .mpa-card h3 a {
+  font-family: "Comic Sans MS", "Comic Neue", cursive;
+  font-size: 16px;
+  font-weight: bold;
+}
+.dialup-new {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  padding: 2px 6px;
+  background: #ff0000;
+  border: 2px outset #ff8888;
+  color: #ffff00;
+  font-family: Impact, "Arial Black", sans-serif;
+  font-size: 15px;
+  transform: rotate(-12deg);
+  animation: dialup-blink 0.8s steps(1) infinite;
+}
+
+/* Every button: Windows 98 bevel */
+html[data-era="dialup"] main button,
+html[data-era="dialup"] [role="dialog"] button,
+html[data-era="dialup"] .mpa-buy {
+  border: 2px outset #dfdfdf !important;
+  background: var(--dialup-gray) !important;
+  color: #000 !important;
+  font-family: Arial, Helvetica, sans-serif;
+  border-radius: 0;
+}
+html[data-era="dialup"] main button:active,
+html[data-era="dialup"] .mpa-buy:active {
+  border-style: inset !important;
+}
+html[data-era="dialup"] main button[aria-pressed="true"] {
+  border-style: inset !important;
+  background: #000080 !important;
+  color: #fff !important;
+}
+html[data-era="dialup"] .mpa-buy {
+  font-weight: bold;
+  font-size: 16px;
+  text-transform: uppercase;
+}
+html[data-era="dialup"] .mpa-buy:first-of-type {
+  background: linear-gradient(180deg, #33ff33, #009900) !important;
+  color: #fff !important;
+  text-shadow: 1px 1px 0 #000;
+}
+html[data-era="dialup"] select {
+  border: 2px inset #dfdfdf;
+  background: #fff;
+  color: #000;
+  font-family: Arial, Helvetica, sans-serif;
+}
+html[data-era="dialup"] [role="dialog"] {
+  border: 4px outset #dfdfdf;
+  background: var(--dialup-gray);
+}
+html[data-era="dialup"] .site-footer {
+  background: #000080;
+  color: #fff;
+}
+html[data-era="dialup"] .site-footer a {
+  color: #ffff00;
+}
+html[data-era="dialup"] .site-footer p {
+  font-family: Impact, "Arial Black", sans-serif;
+  font-style: italic;
+  font-size: 40px !important;
+}
+
+/* ---------- Winamp ---------- */
+.winamp {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 55;
+  width: 280px;
+  border: 2px outset #5a5a6e;
+  background: linear-gradient(180deg, #3b3b4f, #22222e);
+  color: #00ff00;
+  font-family: "Courier New", monospace;
+  font-size: 12px;
+  box-shadow: 3px 3px 0 #000;
+}
+.winamp-title,
+.winamp-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 3px 6px;
+}
+.winamp-title {
+  background: linear-gradient(90deg, #000080, #1084d0);
+  color: #fff;
+  font-weight: bold;
+}
+.winamp button {
+  cursor: pointer;
+  padding: 2px 8px;
+  border: 2px outset #8a8a9e;
+  background: #4a4a5e;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+}
+.winamp button:active {
+  border-style: inset;
+}
+.winamp-lcd {
+  overflow: hidden;
+  margin: 6px;
+  padding: 4px;
+  border: 2px inset #111;
+  background: #000;
+  white-space: nowrap;
+}
+.winamp-lcd-scroll {
+  display: inline-block;
+  padding-left: 100%;
+  animation: dialup-marquee-lcd 12s linear infinite;
+}
+.winamp-video {
+  position: relative;
+  margin: 0 6px 6px;
+  aspect-ratio: 16 / 9;
+  border: 2px inset #111;
+  background: #000;
+}
+.winamp-video iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.winamp-list {
+  max-height: 160px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px 6px 6px;
+  list-style: none;
+  background: #000;
+}
+.winamp-list button {
+  width: 100%;
+  border: 0;
+  background: none;
+  color: #00ff00;
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  text-align: left;
+}
+.winamp-list button[aria-current="true"] {
+  background: #0000aa;
+  color: #fff;
+}
+.winamp-mini {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 55;
+  cursor: pointer;
+  padding: 6px 10px;
+  border: 2px outset #8a8a9e;
+  background: #22222e;
+  color: #00ff00;
+  font-family: "Courier New", monospace;
+}
+
+/* ---------- Sparkles ---------- */
+.sparkle-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+}
+.sparkle {
+  position: absolute;
+  font-size: 14px;
+  animation: dialup-sparkle 0.8s ease-out forwards;
+}
+
+/* ---------- Animations ---------- */
+@keyframes dialup-blink {
+  50% {
+    visibility: hidden;
+  }
+}
+.dialup-blink {
+  animation: dialup-blink 1s steps(1) infinite;
+}
+@keyframes dialup-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes dialup-marquee-lcd {
+  to {
+    transform: translateX(-100%);
+  }
+}
+@keyframes dialup-flicker {
+  50% {
+    filter: hue-rotate(25deg) brightness(1.2);
+  }
+}
+@keyframes dialup-sparkle {
+  to {
+    opacity: 0;
+    transform: translateY(18px) scale(0.4);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dialup-marquee-track,
+  .winamp-lcd-scroll,
+  .dialup-flames,
+  .dialup-new,
+  .dialup-blink,
+  .dialup-construction span:last-child {
+    animation: none;
+  }
+}
+
+/* ---------- Phones: stack it (1999 never had to) ---------- */
+@media (max-width: 760px) {
+  html[data-era="dialup"] .site-frame {
+    grid-template-areas: "banner" "side" "content";
+    grid-template-columns: minmax(0, 1fr);
+    margin: 0;
+    border-width: 2px;
+  }
+  .dialup-photo {
+    flex-basis: 84px;
+    height: 84px;
+  }
+  .dialup-strip {
+    display: none;
+  }
+  .dialup-sidebar {
+    flex-flow: row wrap;
+    justify-content: center;
+  }
+  .dialup-pills {
+    flex-flow: row wrap;
+    width: 100%;
+  }
+  .dialup-pills > * {
+    flex: 1 1 30%;
+  }
+  .dialup-sidebar > .dialup-box:nth-of-type(n + 2),
+  .dialup-construction {
+    display: none !important;
+  }
+  .winamp {
+    right: 8px;
+    bottom: 76px;
+    width: min(280px, calc(100% - 16px));
+  }
+  .winamp-mini {
+    bottom: 76px;
+  }
+}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DIALUP_HREF } from "@/lib/dialup";
 import { POPUP_URL, SITE_NAME, SUPPORT_MAILTO } from "@/lib/site";
 
 const LINKS = [
@@ -9,7 +10,7 @@ const LINKS = [
 
 export function SiteFooter() {
   return (
-    <footer className="flex flex-wrap items-end justify-between gap-8 border-t border-line px-4 py-12 uppercase sm:px-8">
+    <footer className="site-footer flex flex-wrap items-end justify-between gap-8 border-t border-line px-4 py-12 uppercase sm:px-8">
       <p className="headline-xl text-[clamp(48px,8vw,120px)] leading-[0.85]">{SITE_NAME}</p>
       <nav aria-label="Footer" className="flex flex-wrap gap-6 text-muted">
         {LINKS.map((l) => (
@@ -21,6 +22,10 @@ export function SiteFooter() {
           The Archive
         </Link>
       </nav>
+      {/* Easter egg: the whole site, 1999 Angelfire style. */}
+      <a href={DIALUP_HREF} className="dialup-hide w-full text-[10px] normal-case tracking-normal text-placeholder hover:text-rust">
+        Best viewed in Netscape Navigator 4.0 · Dial-Up Edition
+      </a>
     </footer>
   );
 }
