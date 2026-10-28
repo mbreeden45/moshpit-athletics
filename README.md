@@ -21,6 +21,7 @@ npm run dev
 | `NEXT_PUBLIC_POPUP_URL` | public | Pop-Up base URL (the Archive nav link and the Terms/Privacy footer links) |
 | `STRIPE_SECRET_KEY` | server only | Stripe secret key (`sk_test_…` while testing, `sk_live_…` to sell) |
 | `STRIPE_WEBHOOK_SECRET` | server only | Signing secret (`whsec_…`) of the Stripe webhook endpoint for `/api/stripe/webhook` |
+| `PRINTIFY_WEBHOOK_SECRET` | server only | Shared secret for Printify's product webhooks (`/api/printify/webhook`); signs `X-Pfy-Signature` |
 | `PRINTIFY_TEST_ORDERS` | server only | Test-mode payments only: `off` (default) logs the Printify order; `draft` creates it in Printify without sending it to print |
 | `NEXT_PUBLIC_SITE_URL` | public | Canonical URL for the sitemap, canonical tags and OG cards |
 
@@ -37,6 +38,12 @@ Never commit `.env.local`.
   because full variant payloads go past Next's 2 MB data-cache entry limit at 50.
   A product shows on the site only if it is `visible` and published to the
   Pop-Up (it has `external.id`).
+- **Instant updates**: Printify sends `product:updated`, `product:publish:started`
+  and `product:deleted` webhooks to `/api/printify/webhook`, which verifies the
+  signature and drops the cached catalog and pages, so price and product edits
+  show on the next visit. The hourly refresh stays as a fallback. Register the
+  webhooks with `POST /v1/shops/{shop_id}/webhooks.json` (`topic`, `url`,
+  `secret`); leave the Pop-Up's own webhooks on the shop alone.
 - **`lib/blanks.ts`**: garment specs keyed by `blueprint_id`.
   `706` is Comfort Colors 1717 and `1716` is Shaka Wear Max Heavyweight.
   Chest × length shows inline on the PDP size buttons.
