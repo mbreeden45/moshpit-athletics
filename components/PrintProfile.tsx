@@ -2,7 +2,7 @@ import { PRINT_PROFILE } from "@/lib/copy";
 import type { Tone } from "@/lib/product";
 
 /**
- * Print Profile box. On a PDP, `activeTone` marks the profile that applies
+ * Print breakdown box. On a PDP, `activeTone` marks the profile that applies
  * to the selected colorway.
  */
 export function PrintProfile({ activeTone }: { activeTone?: Tone }) {
@@ -10,7 +10,7 @@ export function PrintProfile({ activeTone }: { activeTone?: Tone }) {
   return (
     <section aria-labelledby="print-profile-heading" className="flex flex-col gap-[18px] border border-paper p-5">
       <h2 id="print-profile-heading" className="headline text-[28px] leading-none">
-        Print Profile
+        {PRINT_PROFILE.heading}
       </h2>
       {tones.map((tone, i) => {
         const profile = PRINT_PROFILE[tone];

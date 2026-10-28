@@ -34,7 +34,7 @@ Never commit `.env.local`.
 - **`lib/blanks.ts`**: garment specs keyed by `blueprint_id`.
   `706` is Comfort Colors 1717 and `1716` is Shaka Wear Max Heavyweight.
   Chest × length shows inline on the PDP size buttons.
-- **`lib/copy.ts`**: fixed brand copy: banner, fit, and the Print Profile
+- **`lib/copy.ts`**: fixed brand copy: banner, fit, shipping/returns, and the Print
   (dark/light colorways plus the ink notice). Each color's swatch luminance
   picks which profile is highlighted.
 - **`lib/product.ts`**: turns Printify payloads into a client-safe view model.
@@ -59,7 +59,7 @@ Archivo (variable width, 62–80% stretch) for headlines and IBM Plex Mono at
 - **Home**: hero, Collection grid (hover shows quick-buy size pills), then the
   newest tee as a featured product with its Garment Blueprint.
 - **Product page**: gallery plus a sticky buy panel (color, size with inline
-  chest × length, Print Profile, accordion), the Garment Blueprint table, and
+  chest × length, Print box, accordion), the Garment Blueprint table, and
   a fixed buy bar on mobile.
 
 Where the mockup shows things the Pop-Up flow doesn't support (Apple Pay

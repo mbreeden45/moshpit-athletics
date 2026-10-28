@@ -16,22 +16,23 @@ export const FIT_COPY =
   "Boxy, relaxed drop. Stick true to size for standard room, or size down for a classic, closer cut.";
 
 export const PRINT_PROFILE = {
+  heading: "Print",
   dark: {
     label: "Dark Colorways",
-    body: "Heavy, high-opacity pigment strike over a solid underbase. Bold contrast and tactile weight that won't wash out or peel like a heat-transfer decal. Breaks in and softens naturally over time.",
+    body: "Bold, opaque pigment strike on a solid base. Heavy hand-feel that won't peel or crack. Breaks in and softens naturally with wash and wear.",
   },
   light: {
     label: "Light Colorways",
-    body: "Light, soft-hand print where pigment binds directly into the cotton knit for maximum breathability.",
+    body: "Soft-hand print where pigment binds directly into the cotton knit for high breathability.",
   },
-  notice: "Industrial water-based pigment inks. Zero plastic heat-press vinyl.",
+  notice: "Water-based pigment print. No plastic heat-press film.",
 } as const;
 
 export const CARE_COPY =
   "Machine wash cold inside-out with like colors. Hang dry or tumble low. Dark colorways are pre-treated to lock in white ink vibrancy; any initial wash scent or crispness clears after the first rinse.";
 
 export const SHIPPING_RETURNS_COPY =
-  "Ships in 3 to 5 business days. Returns accepted within 30 days, unworn.";
+  "Orders ship in 3 to 7 business days. Because items are produced specifically for each order, all sales are final. If an item arrives misprinted or damaged, contact us with photos for an immediate replacement.";
 
 export const CHECKOUT_NOTE =
   "Checkout, taxes and shipping are handled on our Printify Pop-Up store. Confirm color and size on the next page.";
