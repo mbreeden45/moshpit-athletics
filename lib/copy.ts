@@ -38,5 +38,11 @@ export const SHIPPING_RETURNS = {
   tail: " with photos for an immediate replacement.",
 } as const;
 
-export const CHECKOUT_NOTE =
-  "Checkout, taxes and shipping are handled on our Printify Pop-Up store. Confirm color and size on the next page.";
+export const CHECKOUT_NOTE = "Secure checkout by Stripe. Shipping is calculated at checkout.";
+
+export const CART_NOTE =
+  "Shipping is calculated at checkout. Every item is printed to order, so all sales are final.";
+
+/** Shown next to the pay button on Stripe Checkout. */
+export const STRIPE_SUBMIT_NOTE =
+  "All sales are final: every item is printed to order. If something arrives misprinted or damaged, email support@moshpitathletics.com with photos within 30 days of delivery for a replacement.";

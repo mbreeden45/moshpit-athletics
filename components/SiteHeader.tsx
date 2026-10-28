@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { POPUP_URL, SITE_NAME } from "@/lib/site";
+import { BagButton } from "./CartProvider";
 
 const NAV = [
   { label: "Catalog", href: "/#collection" },
@@ -26,10 +27,7 @@ export function SiteHeader() {
       </nav>
       <div className="flex gap-5 uppercase">
         <span className="text-muted">USD</span>
-        {/* Cart lives on the Printify Pop-Up store. */}
-        <a href={POPUP_URL} className="hover:text-rust">
-          Bag
-        </a>
+        <BagButton />
       </div>
     </header>
   );

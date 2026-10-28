@@ -3,11 +3,13 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { getMeasurement } from "@/lib/blanks";
+import type { CartItem } from "@/lib/cart";
 import { CARE_COPY, CHECKOUT_NOTE, FIT_COPY, SHIPPING_RETURNS, TOP_BANNER } from "@/lib/copy";
 import type { StorefrontDesign } from "@/lib/designs";
 import { formatPrice, type ProductImage, type StorefrontProduct } from "@/lib/product";
 import { SUPPORT_MAILTO } from "@/lib/site";
 import { BRAND_DISCLAIMER } from "@/lib/specs";
+import { useCart } from "./CartProvider";
 import { GarmentBlueprint } from "./GarmentBlueprint";
 import { PrintProfile } from "./PrintProfile";
 
@@ -57,6 +59,8 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
   const [colorId, setColorId] = useState<number | null>(() => initialColorId(product));
   const [sizeId, setSizeId] = useState<number | null>(null);
   const [openPanel, setOpenPanel] = useState(0);
+  const [needSize, setNeedSize] = useState(false);
+  const { add, buyNow } = useCart();
 
   // Old per-product links land here with ?blank=<key>.
   useEffect(() => {
@@ -81,7 +85,13 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
     return sorted.length > 1 && sorted.length % 2 === 0 ? sorted.slice(0, -1) : sorted;
   }, [colorVariants, product.images]);
 
-  const selectedVariant = size ? colorVariants.find((v) => v.sizeId === size.id) ?? null : null;
+  // One-size items (caps) and size-less items (prints) don't need a size pick.
+  const effectiveSize = size ?? (sizes.length === 1 ? sizes[0] : null);
+  const selectedVariant = effectiveSize
+    ? colorVariants.find((v) => v.sizeId === effectiveSize.id) ?? null
+    : sizes.length === 0
+      ? colorVariants[0] ?? null
+      : null;
   const price = selectedVariant?.price ?? Math.min(...colorVariants.map((v) => v.price), product.priceMax);
   const fromPrefix = !selectedVariant && colorVariants.some((v) => v.price !== price) ? "From " : "";
   const priceLabel = `${fromPrefix}${formatPrice(price, true)}`;
@@ -103,6 +113,41 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
       else url.searchParams.set("blank", next.blankKey);
       window.history.replaceState(window.history.state, "", url);
     }
+  }
+
+  /** The current selection as a cart line, or null (and a size prompt) if incomplete. */
+  function cartItem(): CartItem | null {
+    if (!selectedVariant || !selectedVariant.available) {
+      setNeedSize(true);
+      document.getElementById(`${product.id}-sizes`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return null;
+    }
+    const image =
+      sortImages(product.images.filter((img) => img.variantIds.includes(selectedVariant.id)))[0]?.src ??
+      gallery[0]?.src ??
+      product.defaultImage;
+    return {
+      productId: product.id,
+      variantId: selectedVariant.id,
+      quantity: 1,
+      slug: design.slug,
+      name: design.name,
+      detail: [design.products.length > 1 ? design.optionLabels[blankIndex] : null, color?.name, effectiveSize?.name]
+        .filter(Boolean)
+        .join(" / "),
+      price: selectedVariant.price,
+      image,
+    };
+  }
+
+  function addToCart() {
+    const item = cartItem();
+    if (item) add(item);
+  }
+
+  function buyItNow() {
+    const item = cartItem();
+    if (item) buyNow(item);
   }
 
   function selectColor(id: number) {
@@ -266,7 +311,7 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
           )}
 
           {sizes.length > 0 && (
-            <fieldset>
+            <fieldset id={`${product.id}-sizes`} className="scroll-mt-24">
               <legend className="mb-2.5 uppercase">Size: {size?.name ?? "Select"}</legend>
               <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2">
                 {sizes.map((s) => {
@@ -279,7 +324,10 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
                       key={s.id}
                       type="button"
                       disabled={disabled}
-                      onClick={() => setSizeId(selected ? null : s.id)}
+                      onClick={() => {
+                        setSizeId(selected ? null : s.id);
+                        setNeedSize(false);
+                      }}
                       aria-pressed={selected}
                       className={`cursor-pointer whitespace-nowrap border px-2 py-3.5 text-[13px] disabled:cursor-not-allowed disabled:opacity-30 disabled:line-through ${
                         selected ? "border-paper bg-paper text-ink" : "border-edge hover:border-muted"
@@ -295,24 +343,30 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
             </fieldset>
           )}
 
-          {/* Checkout routes straight to this item on the Printify Pop-Up store. */}
           <div className="flex flex-col gap-6">
-            <a
-              href={product.popupUrl}
-              className="border border-paper bg-paper p-5 text-center text-[14px] font-medium uppercase tracking-[0.06em] text-ink hover:border-rust hover:bg-rust hover:text-paper"
+            {needSize && (
+              <p role="alert" className="-mb-3 uppercase text-rust">
+                {selectedVariant ? "That combination is sold out." : "Pick a size first."}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={addToCart}
+              className="cursor-pointer border border-paper bg-paper p-5 text-center text-[14px] font-medium uppercase tracking-[0.06em] text-ink hover:border-rust hover:bg-rust hover:text-paper"
             >
               Add to cart / {formatPrice(price, true)}
-            </a>
-            <a
-              href={product.popupUrl}
-              className="border border-paper bg-black p-[18px] text-center text-[14px] font-medium hover:bg-panel"
+            </button>
+            <button
+              type="button"
+              onClick={buyItNow}
+              className="cursor-pointer border border-paper bg-black p-[18px] text-center text-[14px] font-medium hover:bg-panel"
             >
               Buy now
-            </a>
+            </button>
             <p className="label -mt-3 normal-case tracking-normal">
               {CHECKOUT_NOTE}
-              {(color || size) && (
-                <span className="text-paper"> {[color?.name, size?.name].filter(Boolean).join(" / ")}</span>
+              {(color || effectiveSize) && (
+                <span className="text-paper"> {[color?.name, effectiveSize?.name].filter(Boolean).join(" / ")}</span>
               )}
             </p>
           </div>
@@ -357,15 +411,20 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
 
       {stickyBar && (
         <div className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-[1fr_1.4fr] border-t border-paper bg-ink md:hidden">
-          <a
-            href={product.popupUrl}
-            className="border-r border-paper py-5 text-center uppercase tracking-[0.06em]"
+          <button
+            type="button"
+            onClick={addToCart}
+            className="cursor-pointer border-r border-paper py-5 text-center uppercase tracking-[0.06em]"
           >
             Add to cart
-          </a>
-          <a href={product.popupUrl} className="bg-paper py-5 text-center font-medium uppercase tracking-[0.06em] text-ink">
+          </button>
+          <button
+            type="button"
+            onClick={buyItNow}
+            className="cursor-pointer bg-paper py-5 text-center font-medium uppercase tracking-[0.06em] text-ink"
+          >
             Buy now / {formatPrice(price)}
-          </a>
+          </button>
         </div>
       )}
     </>
