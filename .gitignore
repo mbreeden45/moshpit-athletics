@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+build
+coverage
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+npm-debug.log*
+
+# secrets — never commit real credentials
+.env
+.env*.local
