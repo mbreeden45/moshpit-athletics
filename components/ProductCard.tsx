@@ -38,13 +38,13 @@ function quickAddItems(design: StorefrontDesign): (CartItem & { size: string })[
     .slice(0, PILL_SIZES);
 }
 
-export function ProductCard({ design, priority }: { design: StorefrontDesign; priority?: boolean }) {
+export function ProductCard({ design, priority, isNew }: { design: StorefrontDesign; priority?: boolean; isNew?: boolean }) {
   const product = design.products[0];
   const href = `/products/${design.slug}`;
   const light = product.colors[0]?.tone === "light";
 
   return (
-    <article className="group flex flex-col gap-3.5 bg-ink p-3">
+    <article className="mpa-card group flex flex-col gap-3.5 bg-ink p-3">
       <div
         className={`relative aspect-[4/5] overflow-hidden ${light ? "bg-panel-light" : "bg-panel"}`}
       >
@@ -63,6 +63,7 @@ export function ProductCard({ design, priority }: { design: StorefrontDesign; pr
           )}
         </Link>
         <QuickAddSizes items={quickAddItems(design)} />
+        {isNew && <span className="dialup-only dialup-new">NEW!</span>}
       </div>
 
       <div className="flex justify-between gap-3 font-display text-[19px] font-bold uppercase leading-[1.1] tracking-normal [font-stretch:80%]">

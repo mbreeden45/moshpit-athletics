@@ -28,7 +28,7 @@ export default async function HomePage() {
     <>
       <JsonLd data={itemListLd} />
 
-      <section className="border-b border-line px-4 pb-10 pt-24 sm:px-8">
+      <section className="mpa-hero border-b border-line px-4 pb-10 pt-24 sm:px-8">
         <p className="mb-8 uppercase text-muted">{TOP_BANNER}</p>
         <h1 className="headline-xl text-[clamp(64px,15vw,250px)]">
           {HERO.headline}
@@ -61,7 +61,7 @@ export default async function HomePage() {
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-px border border-line bg-line">
             {designs.map((d, i) => (
-              <ProductCard key={d.key} design={d} priority={i < 4} />
+              <ProductCard key={d.key} design={d} priority={i < 4} isNew={i < 3} />
             ))}
           </div>
         )}

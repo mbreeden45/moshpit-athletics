@@ -11,7 +11,7 @@ const NAV = [
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-line bg-ink/95 px-4 py-4 backdrop-blur-[6px] sm:px-8">
+    <header className="site-header sticky top-0 z-30 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-line bg-ink/95 px-4 py-4 backdrop-blur-[6px] sm:px-8">
       <Link
         href="/"
         className="font-display text-[20px] font-extrabold uppercase tracking-[-0.01em] [font-stretch:75%] hover:text-rust"

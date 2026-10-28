@@ -126,6 +126,23 @@ it to production. Live-mode payments always create and send.
 Sales tax is not collected yet. To add it, enable Stripe Tax and pass
 `automatic_tax: { enabled: true }` in `app/api/checkout/route.ts`.
 
+## Dial-Up Edition
+
+An opt-in 1999 Angelfire skin over the whole site, reached from the small
+"Best viewed in Netscape Navigator 4.0 · Dial-Up Edition" footer link
+(`/?dialup`, remembered per browser; `/?2026` or "Back to 2026" exits).
+
+- `ERA_SCRIPT` (in `<head>`) sets `<html data-era="dialup">` before paint.
+- `app/dialup.css` re-points the design tokens and restyles everything under
+  that attribute; the normal site only sees `.dialup-only { display: none }`.
+- `components/dialup/DialUpChrome.tsx`: banner, sidebar (pill nav, visitor
+  counter frozen at 420, under-construction sign), marquee.
+- `components/dialup/DialUpFx.tsx`: Mosh Pit Radio (a Winamp-style player that
+  embeds official music videos from the artists' own YouTube channels, only
+  after ▶ is pressed) and the sparkle cursor.
+- `lib/dialup.ts`: playlist and `BANNER_PHOTO` (null shows the newest design's
+  mockup; set it to a photo you own or have licensed).
+
 ## Scripts
 
 - `npm run dev` / `npm run build` / `npm start`
