@@ -42,14 +42,23 @@ Never commit `.env.local`.
 - **`lib/product.ts`**: turns Printify payloads into a client-safe view model.
   Also builds slugs, the meta summary and the Pop-Up checkout URL
   (`{NEXT_PUBLIC_POPUP_URL}/product/{external.id}`).
+- **`lib/designs.ts`**: merges one artwork printed on several blanks into a
+  single design: one card, one page, and a Blank picker that swaps photos,
+  colors, sizes, price and the Pop-Up link. Products merge automatically when
+  their uploaded artwork matches exactly (reuse the upload from your Printify
+  library rather than uploading it again). Printify tags override this:
+  `group:<anything>` merges products that share the tag and keeps them apart
+  from untagged ones, and `name:<Design Name>` sets the storefront name.
+  Without a tag, names come from the `DESIGN_NAMES` map, then the product
+  title. Shaka Wear leads, then Comfort Colors, then the rest.
 - **SEO**: each PDP has `generateMetadata` (canonical URL, OG/Twitter
   cards, price meta) plus `Product` and `BreadcrumbList` JSON-LD. There's
   `app/sitemap.ts` (with image entries) and `app/robots.ts`, which blocks
   indexing on non-production Vercel deployments.
 
-URLs look like `/products/my-chemical-romance-bat-tee-68ed6fcded926f86860dfb32`.
-The trailing Printify id resolves the product, and a stale title slug
-redirects (308) to the canonical one.
+URLs look like `/products/the-ernie-tee`, with `?blank=american-apparel-1301`
+for a non-lead blank. Old per-product URLs ending in a Printify id redirect
+(308) to their design page with that blank selected.
 
 ## Design
 

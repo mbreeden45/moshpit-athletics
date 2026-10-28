@@ -1,26 +1,50 @@
 import "server-only";
 import { cache } from "react";
-import { getProduct, getProducts } from "./printify";
+import { groupDesigns, type StorefrontDesign } from "./designs";
+import { getBlueprint, getProducts } from "./printify";
 import { idFromSlug, toStorefrontProduct, type StorefrontProduct } from "./product";
 
 /** Server-side data access used by pages, sitemap and metadata. */
 
 export const getCatalog = cache(async (): Promise<StorefrontProduct[]> => {
   const products = await getProducts();
+  const blueprintIds = [...new Set(products.map((p) => p.blueprint_id))];
+  const blueprints = new Map(
+    await Promise.all(blueprintIds.map(async (id) => [id, await getBlueprint(id)] as const)),
+  );
   return products
-    .map(toStorefrontProduct)
+    .map((p) => toStorefrontProduct(p, blueprints.get(p.blueprint_id) ?? null))
     .filter((p) => p.variants.length > 0)
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 });
 
-/** Resolve a PDP slug to a product via GET /products/{id}.json. */
-export const getCatalogProduct = cache(
-  async (slug: string): Promise<StorefrontProduct | null> => {
-    const id = idFromSlug(slug);
-    if (!id) return null;
-    const product = await getProduct(id);
-    if (!product) return null;
-    const view = toStorefrontProduct(product);
-    return view.variants.length > 0 ? view : null;
-  },
-);
+/** One entry per artwork, each carrying every blank it's printed on. */
+export const getDesigns = cache(async (): Promise<StorefrontDesign[]> => {
+  return groupDesigns(await getCatalog());
+});
+
+export type DesignLookup =
+  | { design: StorefrontDesign; redirectTo?: undefined }
+  | { design?: undefined; redirectTo: string }
+  | null;
+
+/**
+ * Resolve a PDP slug. Old per-product URLs ("…-6a4d7e600e9c38654108213b")
+ * resolve to a redirect onto the design page with that blank selected.
+ */
+export const getDesignBySlug = cache(async (slug: string): Promise<DesignLookup> => {
+  const designs = await getDesigns();
+  const design = designs.find((d) => d.slug === slug);
+  if (design) return { design };
+
+  const id = idFromSlug(slug);
+  if (!id) return null;
+  for (const d of designs) {
+    const product = d.products.find((p) => p.id === id);
+    if (product) {
+      const query = d.products.length > 1 ? `?blank=${product.blankKey}` : "";
+      return { redirectTo: `/products/${d.slug}${query}` };
+    }
+  }
+  return null;
+});

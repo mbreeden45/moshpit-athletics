@@ -1,14 +1,14 @@
 import type { MetadataRoute } from "next";
-import { getCatalog } from "@/lib/catalog";
+import { getDesigns } from "@/lib/catalog";
 import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const products = await getCatalog();
+  const designs = await getDesigns();
 
-  const latest = products.reduce<string | undefined>(
-    (max, p) => (!max || p.updatedAt > max ? p.updatedAt : max),
+  const latest = designs.reduce<string | undefined>(
+    (max, d) => (!max || d.updatedAt > max ? d.updatedAt : max),
     undefined,
   );
 
@@ -19,12 +19,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 1,
     },
-    ...products.map((p) => ({
-      url: `${SITE_URL}/products/${p.slug}`,
-      lastModified: new Date(p.updatedAt),
+    ...designs.map((d) => ({
+      url: `${SITE_URL}/products/${d.slug}`,
+      lastModified: new Date(d.updatedAt),
       changeFrequency: "weekly" as const,
       priority: 0.8,
-      images: p.images.slice(0, 4).map((i) => i.src),
+      images: d.products[0].images.slice(0, 4).map((i) => i.src),
     })),
   ];
 }

@@ -57,6 +57,18 @@ export type PrintifyImage = {
   is_selected_for_publishing?: boolean;
 };
 
+export type PrintifyPrintArea = {
+  variant_ids: number[];
+  placeholders: { position: string; images: { id: string; name?: string }[] }[];
+};
+
+export type PrintifyBlueprint = {
+  id: number;
+  title: string;
+  brand: string;
+  model: string;
+};
+
 export type PrintifyProduct = {
   id: string;
   title: string;
@@ -65,6 +77,7 @@ export type PrintifyProduct = {
   options: PrintifyOption[];
   variants: PrintifyVariant[];
   images: PrintifyImage[];
+  print_areas?: PrintifyPrintArea[];
   created_at: string;
   updated_at: string;
   visible: boolean;
@@ -203,5 +216,19 @@ export async function getProduct(productId: string): Promise<PrintifyProduct | n
       return null;
     }
     throw err;
+  }
+}
+
+/** GET /v1/catalog/blueprints/{id}.json — the blank's brand and model; null on failure. */
+export async function getBlueprint(blueprintId: number): Promise<PrintifyBlueprint | null> {
+  if (!env.printifyToken) return null;
+  try {
+    const { id, title, brand, model } = await printifyFetch<PrintifyBlueprint>(
+      `/catalog/blueprints/${blueprintId}.json`,
+    );
+    return { id, title, brand, model };
+  } catch (err) {
+    console.warn(`[printify] Blueprint ${blueprintId} lookup failed:`, err);
+    return null;
   }
 }
