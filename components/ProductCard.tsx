@@ -2,65 +2,61 @@ import Image from "next/image";
 import Link from "next/link";
 import { formatPrice, type StorefrontProduct } from "@/lib/product";
 
+const PILL_SIZES = 5;
+
 export function ProductCard({ product, priority }: { product: StorefrontProduct; priority?: boolean }) {
   const href = `/products/${product.slug}`;
-  const swatches = product.colors.slice(0, 6);
-  const extra = product.colors.length - swatches.length;
+  const light = product.colors[0]?.tone === "light";
+  // Quick-buy size pills; each routes to this item on the Pop-Up store.
+  const pills = product.isGarment ? product.sizes.slice(0, PILL_SIZES) : [];
 
   return (
-    <article className="group flex flex-col border border-line bg-ink-2">
-      <Link href={href} className="relative block aspect-[4/5] overflow-hidden bg-ink-3">
-        {product.defaultImage ? (
-          <Image
-            src={product.defaultImage}
-            alt={product.title}
-            fill
-            priority={priority}
-            sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-          />
-        ) : (
-          <span className="display absolute inset-0 grid place-items-center text-3xl text-muted">MPA</span>
-        )}
-        {product.blank && (
-          <span className="eyebrow absolute left-3 top-3 bg-ink px-2 py-1 text-paper">{product.blank.name}</span>
-        )}
-      </Link>
-
-      <div className="flex flex-1 flex-col gap-3 p-4">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="text-sm font-semibold leading-snug">
-            <Link href={href} className="hover:text-signal">
-              {product.title}
-            </Link>
-          </h3>
-          <p className="shrink-0 font-mono text-sm">
-            {product.priceMin !== product.priceMax && <span className="text-muted">from </span>}
-            {formatPrice(product.priceMin)}
-          </p>
-        </div>
-
-        {swatches.length > 0 && (
-          <ul className="flex items-center gap-1.5" aria-label={`${product.colors.length} colors`}>
-            {swatches.map((c) => (
-              <li key={c.id} title={c.name} className="size-3.5 rounded-full border border-paper/30" style={{ backgroundColor: c.hex }} />
+    <article className="group flex flex-col gap-3.5 bg-ink p-3">
+      <div
+        className={`relative aspect-[4/5] overflow-hidden ${light ? "bg-panel-light" : "bg-panel"}`}
+      >
+        <Link href={href} className="absolute inset-0" aria-label={product.title}>
+          {product.defaultImage ? (
+            <Image
+              src={product.defaultImage}
+              alt=""
+              fill
+              priority={priority}
+              sizes="(min-width: 1280px) 20vw, (min-width: 768px) 33vw, (min-width: 540px) 50vw, 100vw"
+              className="object-cover"
+            />
+          ) : (
+            <span className="label absolute bottom-3 left-3 text-placeholder">Photo: {product.title}</span>
+          )}
+        </Link>
+        {pills.length > 0 && (
+          <div className="pointer-events-none absolute inset-x-2.5 bottom-2.5 flex justify-end gap-1.5 opacity-0 transition-opacity duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+            {pills.map((s) => (
+              <a
+                key={s.id}
+                href={product.popupUrl}
+                aria-label={`Buy ${product.title} in ${s.name}`}
+                className="border border-paper bg-ink px-[9px] py-1.5 text-[11px] text-paper hover:bg-paper hover:text-ink"
+              >
+                {s.name}
+              </a>
             ))}
-            {extra > 0 && <li className="eyebrow ml-1 text-muted">+{extra}</li>}
-          </ul>
+          </div>
         )}
-
-        <div className="mt-auto grid grid-cols-2 gap-2 pt-1">
-          <Link href={href} className="eyebrow border border-line px-3 py-2.5 text-center hover:border-paper">
-            Details
-          </Link>
-          <a
-            href={product.popupUrl}
-            className="eyebrow bg-paper px-3 py-2.5 text-center font-semibold text-ink transition-colors hover:bg-signal hover:text-paper"
-          >
-            Buy Now
-          </a>
-        </div>
       </div>
+
+      <div className="flex justify-between gap-3 font-display text-[19px] font-bold uppercase leading-[1.1] tracking-normal [font-stretch:80%]">
+        <h3>
+          <Link href={href} className="hover:text-rust">
+            {product.title}
+          </Link>
+        </h3>
+        <span className="shrink-0 font-mono text-[13px] font-normal">
+          {product.priceMin !== product.priceMax && <span className="text-muted">From </span>}
+          {formatPrice(product.priceMin)}
+        </span>
+      </div>
+      <p className="label -mt-1.5">{product.cardSpec}</p>
     </article>
   );
 }

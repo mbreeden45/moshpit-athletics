@@ -25,6 +25,8 @@ export type ProductImage = {
   isDefault: boolean;
 };
 
+export type ProductKind = { one: string; many: string };
+
 export type StorefrontProduct = {
   id: string;
   slug: string;
@@ -39,6 +41,10 @@ export type StorefrontProduct = {
   blank: BlankSpec | null;
   /** Sized like clothing (S/M/L…) — gates fit copy and the print profile. */
   isGarment: boolean;
+  /** Category label, e.g. { one: "Tee", many: "Tees" }. */
+  kind: ProductKind;
+  /** One-line spec under the product card. */
+  cardSpec: string;
   priceMin: number;
   priceMax: number;
   currency: "USD";
@@ -108,11 +114,20 @@ const ENTITIES: Record<string, string> = {
   "&ldquo;": "“",
   "&ndash;": "–",
   "&mdash;": "—",
+  "&sup2;": "²",
+  "&sup3;": "³",
+  "&deg;": "°",
+  "&times;": "×",
+  "&reg;": "®",
+  "&trade;": "™",
+  "&copy;": "©",
+  "&hellip;": "…",
 };
 
 function decodeEntities(s: string): string {
   return s
     .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([a-f0-9]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
     .replace(/&[a-z#0-9]+;/gi, (m) => ENTITIES[m.toLowerCase()] ?? m);
 }
 
@@ -122,7 +137,7 @@ export function parseDescription(html: string): { paragraphs: string[]; bullets:
     html
       .replace(/<\s*(br|\/p|\/li|\/div|\/h\d|\/tr)\s*\/?>/gi, "\n")
       .replace(/<[^>]+>/g, " "),
-  );
+  ).replace(/\s*\.:\s*/g, "\n.: "); // Printify inlines ".:" bullets mid-line
   const lines = text
     .split("\n")
     .map((l) => l.replace(/\s+/g, " ").trim())
@@ -164,11 +179,12 @@ export function toneForHex(hex: string): Tone {
   return l !== null && l >= 0.5 ? "light" : "dark";
 }
 
-export function formatPrice(cents: number): string {
+/** "$48" on cards; pass `exact` for "$48.00" on the buy panel. */
+export function formatPrice(cents: number, exact = false): string {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-    minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
+    minimumFractionDigits: exact || cents % 100 !== 0 ? 2 : 0,
   }).format(cents / 100);
 }
 
@@ -190,6 +206,21 @@ export function getPopupProductUrl(p: Pick<PrintifyProduct, "external">): string
 // ---------------------------------------------------------------------------
 // Normalisation
 // ---------------------------------------------------------------------------
+
+const POSTER_BLUEPRINTS = new Set([282]); // Matte vertical posters
+
+function productKind(p: PrintifyProduct, hasBlank: boolean): ProductKind {
+  const tags = (p.tags ?? []).map((t) => t.toLowerCase());
+  const has = (...keys: string[]) => keys.some((k) => tags.includes(k));
+  if (hasBlank) return { one: "Tee", many: "Tees" };
+  if (POSTER_BLUEPRINTS.has(p.blueprint_id) || has("posters", "poster")) return { one: "Print", many: "Prints" };
+  if (has("hoodies")) return { one: "Hoodie", many: "Hoodies" };
+  if (has("sweatshirts")) return { one: "Crewneck", many: "Crewnecks" };
+  if (has("hats")) return { one: "Cap", many: "Headwear" };
+  if (has("pet", "pets")) return { one: "Pet Goods", many: "Pet Goods" };
+  if (has("t-shirts", "crop tops", "crew neck")) return { one: "Tee", many: "Tees" };
+  return { one: "Goods", many: "Goods" };
+}
 
 const GARMENT_SIZE = /^(XXS|XS|S|M|L|XL|XXL|\d?XL)$/i;
 
@@ -230,6 +261,11 @@ export function toStorefrontProduct(p: PrintifyProduct): StorefrontProduct {
     .map((s) => ({ id: s.id, name: s.title }));
 
   const isGarment = sizes.some((s) => GARMENT_SIZE.test(s.name.trim()));
+  const blank = getBlankSpec(p.blueprint_id);
+  const kind = productKind(p, blank !== null);
+  const cardSpec =
+    blank?.cardSpec ??
+    [kind.one, colors.length > 1 ? `${colors.length} Colorways` : "Made to Order"].join(" / ");
 
   const enabledIds = new Set(variants.map((v) => v.id));
   const images: ProductImage[] = p.images
@@ -257,8 +293,10 @@ export function toStorefrontProduct(p: PrintifyProduct): StorefrontProduct {
     summary: truncate(summarySource, 155),
     tags: p.tags ?? [],
     blueprintId: p.blueprint_id,
-    blank: getBlankSpec(p.blueprint_id),
+    blank,
     isGarment,
+    kind,
+    cardSpec,
     priceMin: prices.length ? Math.min(...prices) : 0,
     priceMax: prices.length ? Math.max(...prices) : 0,
     currency: "USD",

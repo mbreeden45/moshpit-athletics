@@ -1,34 +1,26 @@
 import Link from "next/link";
-import { PRINT_PROFILE } from "@/lib/copy";
 import { POPUP_URL, SITE_NAME } from "@/lib/site";
+
+const LINKS = [
+  { label: "Terms", href: `${POPUP_URL}/terms-and-conditions` },
+  { label: "Privacy", href: `${POPUP_URL}/privacy-policy` },
+  { label: "Checkout", href: POPUP_URL },
+];
 
 export function SiteFooter() {
   return (
-    <footer className="mt-24 border-t border-line">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-3">
-        <div>
-          <p className="display text-4xl">
-            Mosh Pit <span className="text-signal">Athletics</span>
-          </p>
-          <p className="mt-3 max-w-xs text-sm text-paper-dim">{PRINT_PROFILE.notice}</p>
-        </div>
-        <nav aria-label="Footer" className="eyebrow flex flex-col gap-3 text-paper-dim">
-          <Link href="/#shop" className="hover:text-paper">
-            All products
-          </Link>
-          <Link href="/#print-profile" className="hover:text-paper">
-            Print profile
-          </Link>
-          <a href={POPUP_URL} className="hover:text-paper">
-            Checkout / Order status
+    <footer className="flex flex-wrap items-end justify-between gap-8 border-t border-line px-4 py-12 uppercase sm:px-8">
+      <p className="headline-xl text-[clamp(48px,8vw,120px)] leading-[0.85]">{SITE_NAME}</p>
+      <nav aria-label="Footer" className="flex flex-wrap gap-6 text-muted">
+        {LINKS.map((l) => (
+          <a key={l.label} href={l.href} className="hover:text-rust">
+            {l.label}
           </a>
-        </nav>
-        <p className="eyebrow text-muted md:text-right">
-          © {new Date().getFullYear()} {SITE_NAME}
-          <br />
-          Printed to order in the USA
-        </p>
-      </div>
+        ))}
+        <Link href="/#collection" className="border-b border-paper text-paper hover:border-rust hover:text-rust">
+          The Archive
+        </Link>
+      </nav>
     </footer>
   );
 }

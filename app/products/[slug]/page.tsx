@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
-import { BlankSpecs } from "@/components/BlankSpecs";
+import { GarmentBlueprint } from "@/components/GarmentBlueprint";
 import { JsonLd } from "@/components/JsonLd";
 import { ProductConfigurator } from "@/components/ProductConfigurator";
 import { getCatalog, getCatalogProduct } from "@/lib/catalog";
@@ -80,6 +79,7 @@ function productJsonLd(p: StorefrontProduct) {
     sku: p.id,
     image: p.images.slice(0, 8).map((i) => i.src),
     brand: { "@type": "Brand", name: SITE_NAME },
+    category: p.kind.many,
     ...(p.blank ? { material: `${p.blank.weight} ${p.blank.fabric}` } : {}),
     ...(p.colors.length ? { color: p.colors.map((c) => c.name).join(", ") } : {}),
     ...(p.sizes.length ? { size: p.sizes.map((s) => s.name).join(", ") } : {}),
@@ -92,7 +92,7 @@ function productJsonLd(p: StorefrontProduct) {
       offerCount: p.variants.length,
       availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       itemCondition: "https://schema.org/NewCondition",
-      seller: { "@type": "Organization", name: SITE_NAME },
+      seller: { "@type": "Organization", "@id": `${SITE_URL}/#organization`, name: SITE_NAME },
     },
   };
 }
@@ -116,55 +116,12 @@ export default async function ProductPage({ params }: Props) {
   // Titles change in Printify; keep one canonical URL per product.
   if (slug !== product.slug) permanentRedirect(`/products/${product.slug}`);
 
-  const { descriptionParagraphs, descriptionBullets, blank } = product;
-
   return (
-    <>
+    <div className="pb-16 md:pb-0">
       <JsonLd data={productJsonLd(product)} />
       <JsonLd data={breadcrumbJsonLd(product)} />
-
-      <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6">
-        <nav aria-label="Breadcrumb" className="eyebrow mb-8 text-muted">
-          <ol className="flex flex-wrap gap-2">
-            <li>
-              <Link href="/#shop" className="hover:text-paper">
-                Shop
-              </Link>
-            </li>
-            <li aria-hidden="true">/</li>
-            <li aria-current="page" className="text-paper-dim">
-              {product.title}
-            </li>
-          </ol>
-        </nav>
-
-        <ProductConfigurator product={product} />
-
-        <div className="mt-20 grid gap-10 lg:grid-cols-2">
-          {blank && <BlankSpecs blank={blank} />}
-          {(descriptionParagraphs.length > 0 || descriptionBullets.length > 0) && (
-            <section aria-labelledby="details-heading" className={blank ? "" : "lg:col-span-2"}>
-              <h2 id="details-heading" className="eyebrow mb-4 text-paper-dim">
-                Details
-              </h2>
-              <div className="space-y-4 text-sm leading-relaxed text-paper-dim">
-                {descriptionParagraphs.slice(0, 6).map((p, i) => (
-                  <p key={i}>{p}</p>
-                ))}
-              </div>
-              {descriptionBullets.length > 0 && (
-                <ul className="mt-6 divide-y divide-line border-y border-line text-sm">
-                  {descriptionBullets.map((b, i) => (
-                    <li key={i} className="py-2.5">
-                      {b}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
-          )}
-        </div>
-      </div>
-    </>
+      <ProductConfigurator product={product} stickyBar />
+      {product.blank && <GarmentBlueprint blank={product.blank} />}
+    </div>
   );
 }

@@ -13,6 +13,8 @@ export type BlankSpec = {
   fabric: string;
   collar: string;
   cut: string;
+  /** One-line spec under product cards, e.g. "7.5 oz Heavyweight Cotton / Boxy Fit". */
+  cardSpec: string;
   measurements: Record<string, SizeMeasurement>;
 };
 
@@ -23,6 +25,7 @@ export const COMFORT_COLORS_1717: BlankSpec = {
   fabric: "Ring-spun garment-dyed cotton",
   collar: '3/4" collar',
   cut: "Vintage boxy drape",
+  cardSpec: "6.1 oz Garment-Dyed Cotton / Boxy Fit",
   measurements: {
     S: { chest: 18.25, length: 26.6 },
     M: { chest: 20.25, length: 28 },
@@ -39,6 +42,7 @@ export const SHAKA_WEAR_MAX_HEAVYWEIGHT: BlankSpec = {
   fabric: "Combed cotton",
   collar: '1" thick ribbed neckband',
   cut: "Structured dropped-shoulder cut",
+  cardSpec: "7.5 oz Heavyweight Cotton / Boxy Fit",
   measurements: {
     S: { chest: 18, length: 28 },
     M: { chest: 20, length: 29 },

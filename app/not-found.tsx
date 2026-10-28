@@ -2,15 +2,18 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <section className="mx-auto max-w-3xl px-4 py-32 text-center sm:px-6">
-      <p className="eyebrow text-signal">404</p>
-      <h1 className="display mt-4 text-6xl sm:text-7xl">Sold through or never pressed</h1>
-      <p className="mt-6 text-paper-dim">That piece isn&rsquo;t in the current catalog.</p>
+    <section className="px-4 pb-24 pt-24 sm:px-8">
+      <p className="mb-8 uppercase text-muted">404</p>
+      <h1 className="headline-xl text-[clamp(56px,11vw,180px)]">
+        Sold through.
+        <br />
+        <span className="text-muted">Or never pressed.</span>
+      </h1>
       <Link
-        href="/#shop"
-        className="display mt-10 inline-block border-2 border-paper px-8 py-4 text-2xl hover:border-signal hover:bg-signal"
+        href="/#collection"
+        className="mt-16 inline-block border border-paper bg-paper px-9 py-5 font-medium uppercase text-ink hover:bg-ink hover:text-paper"
       >
-        Back to the shop
+        Back to the collection
       </Link>
     </section>
   );

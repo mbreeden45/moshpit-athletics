@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import { formatInches, getMeasurement } from "@/lib/blanks";
-import { CHECKOUT_NOTE, FIT_COPY } from "@/lib/copy";
+import { getMeasurement } from "@/lib/blanks";
+import { CARE_COPY, CHECKOUT_NOTE, FIT_COPY, SHIPPING_RETURNS_COPY, TOP_BANNER } from "@/lib/copy";
 import { formatPrice, type ProductImage, type StorefrontProduct } from "@/lib/product";
 import { PrintProfile } from "./PrintProfile";
 
-const POSITION_ORDER = ["front", "back", "left_sleeve", "right_sleeve", "other"];
+const POSITION_ORDER = ["front", "back", "folded", "left_sleeve", "right_sleeve", "other"];
+const MAX_GALLERY = 7;
+const DROP_LABEL = TOP_BANNER.split("/")[0].trim(); // "Drop 07"
 
 function sortImages(images: ProductImage[]): ProductImage[] {
   const rank = (p: string) => {
@@ -17,7 +19,19 @@ function sortImages(images: ProductImage[]): ProductImage[] {
   return [...images].sort((a, b) => rank(a.position) - rank(b.position));
 }
 
-export function ProductConfigurator({ product }: { product: StorefrontProduct }) {
+function positionLabel(p: string): string {
+  return p.replace(/_/g, " ");
+}
+
+type Props = {
+  product: StorefrontProduct;
+  /** h1 on the PDP, h2 when featured on the home page. */
+  as?: "h1" | "h2";
+  /** Fixed mobile buy bar (PDP only). */
+  stickyBar?: boolean;
+};
+
+export function ProductConfigurator({ product, as: Heading = "h1", stickyBar = false }: Props) {
   const { colors, sizes, variants, blank } = product;
 
   const initialColorId = useMemo(() => {
@@ -31,193 +45,211 @@ export function ProductConfigurator({ product }: { product: StorefrontProduct })
 
   const [colorId, setColorId] = useState<number | null>(initialColorId);
   const [sizeId, setSizeId] = useState<number | null>(null);
-  const [imageIndex, setImageIndex] = useState(0);
+  const [openPanel, setOpenPanel] = useState(0);
 
   const color = colors.find((c) => c.id === colorId) ?? null;
+  const size = sizes.find((s) => s.id === sizeId) ?? null;
   const colorVariants = colorId == null ? variants : variants.filter((v) => v.colorId === colorId);
 
   const gallery = useMemo(() => {
     const ids = new Set(colorVariants.map((v) => v.id));
     const forColor = product.images.filter((img) => img.variantIds.some((id) => ids.has(id)));
-    return sortImages(forColor.length ? forColor : product.images);
+    const sorted = sortImages(forColor.length ? forColor : product.images).slice(0, MAX_GALLERY);
+    // Lead shot + an even count keeps the 2-up grid free of empty cells.
+    return sorted.length > 1 && sorted.length % 2 === 0 ? sorted.slice(0, -1) : sorted;
   }, [colorVariants, product.images]);
 
-  const activeImage = gallery[Math.min(imageIndex, gallery.length - 1)];
-
-  const selectedVariant =
-    sizeId == null ? null : colorVariants.find((v) => v.sizeId === sizeId) ?? null;
-
-  const colorPrices = colorVariants.map((v) => v.price);
-  const priceLabel = selectedVariant
-    ? formatPrice(selectedVariant.price)
-    : colorPrices.length && Math.min(...colorPrices) !== Math.max(...colorPrices)
-      ? `${formatPrice(Math.min(...colorPrices))} – ${formatPrice(Math.max(...colorPrices))}`
-      : formatPrice(colorPrices[0] ?? product.priceMin);
+  const selectedVariant = size ? colorVariants.find((v) => v.sizeId === size.id) ?? null : null;
+  const price = selectedVariant?.price ?? Math.min(...colorVariants.map((v) => v.price), product.priceMax);
+  const fromPrefix = !selectedVariant && colorVariants.some((v) => v.price !== price) ? "From " : "";
+  const priceLabel = `${fromPrefix}${formatPrice(price, true)}`;
 
   function selectColor(id: number) {
     setColorId(id);
-    setImageIndex(0);
-    // Keep the chosen size only if it exists in the new colorway.
     if (sizeId != null && !variants.some((v) => v.colorId === id && v.sizeId === sizeId && v.available)) {
       setSizeId(null);
     }
   }
 
-  return (
-    <div className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-14">
-      {/* Gallery */}
-      <div className="lg:sticky lg:top-24 lg:self-start">
-        <div className="relative aspect-[4/5] overflow-hidden border border-line bg-ink-3">
-          {activeImage ? (
-            <Image
-              key={activeImage.src}
-              src={activeImage.src}
-              alt={`${product.title}${color ? ` in ${color.name}` : ""} — ${activeImage.position.replace("_", " ")} view`}
-              fill
-              priority
-              sizes="(min-width: 1024px) 55vw, 100vw"
-              className="object-cover"
-            />
-          ) : (
-            <span className="display absolute inset-0 grid place-items-center text-5xl text-muted">MPA</span>
-          )}
-        </div>
-        {gallery.length > 1 && (
-          <ul className="mt-3 grid grid-cols-5 gap-2 sm:grid-cols-6" aria-label="Product images">
-            {gallery.slice(0, 12).map((img, i) => (
-              <li key={img.src}>
-                <button
-                  type="button"
-                  onClick={() => setImageIndex(i)}
-                  aria-label={`Show ${img.position.replace("_", " ")} view`}
-                  aria-pressed={img === activeImage}
-                  className={`relative block aspect-square w-full overflow-hidden border bg-ink-3 ${
-                    img === activeImage ? "border-signal" : "border-line hover:border-paper-dim"
-                  }`}
-                >
-                  <Image src={img.src} alt="" fill sizes="96px" className="object-cover" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+  const panels = [
+    {
+      title: product.isGarment ? "Garment specs" : "Details",
+      body: blank
+        ? `${blank.fabric}, ${blank.weight}. ${blank.collar}. ${blank.cut}. Printed to order in the USA.`
+        : product.descriptionParagraphs.slice(0, 3).join(" ") ||
+          "Printed to order in the USA.",
+      list: blank ? [] : product.descriptionBullets.slice(0, 8),
+    },
+    ...(product.isGarment ? [{ title: "Care", body: CARE_COPY, list: [] }] : []),
+    { title: "Shipping and returns", body: SHIPPING_RETURNS_COPY, list: [] },
+  ];
 
-      {/* Buy box */}
-      <div className="flex flex-col gap-8">
-        <header>
-          {blank && <p className="eyebrow text-signal">{blank.name} / {blank.weight}</p>}
-          <h1 className="display mt-3 text-5xl sm:text-6xl">{product.title}</h1>
-          {product.subtitle && <p className="mt-3 text-sm text-paper-dim">{product.subtitle}</p>}
-          <p className="mt-5 font-mono text-2xl" aria-live="polite">
+  const panelBg = color?.tone === "light" ? "bg-panel-light" : "bg-panel";
+
+  return (
+    <>
+      <section className="flex flex-wrap items-start border-t border-line">
+        {/* Gallery: lead shot full-width, then a 2-up grid */}
+        <div className="grid flex-[1_1_560px] grid-cols-2 gap-px bg-line">
+          {gallery.length === 0 && (
+            <div className={`col-span-2 flex aspect-[1/1.1] items-end p-5 label ${panelBg} text-placeholder`}>
+              Photo: {product.title}
+            </div>
+          )}
+          {gallery.map((img, i) => (
+            <div
+              key={img.src}
+              className={`relative overflow-hidden ${panelBg} ${i === 0 ? "col-span-2 aspect-[1/1.1]" : "aspect-square"}`}
+            >
+              <Image
+                src={img.src}
+                alt={`${product.title}${color ? `, ${color.name}` : ""} — ${positionLabel(img.position)}`}
+                fill
+                priority={i === 0}
+                sizes={i === 0 ? "(min-width: 1000px) 57vw, 100vw" : "(min-width: 1000px) 28vw, 50vw"}
+                className="object-cover"
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Buy panel */}
+        <div className="flex flex-[1_1_420px] flex-col gap-6 border-line px-4 py-10 sm:px-8 lg:sticky lg:top-[60px] lg:border-l">
+          <p className="uppercase text-rust">
+            {DROP_LABEL} / {product.kind.many}
+          </p>
+          <div>
+            <Heading className="headline-xl text-[clamp(56px,6vw,96px)] leading-[0.88]">{product.title}</Heading>
+            {product.subtitle && <p className="label mt-4 normal-case">{product.subtitle}</p>}
+          </div>
+          <p className="text-[24px]" aria-live="polite">
             {priceLabel}
           </p>
-        </header>
 
-        {colors.length > 0 && (
-          <fieldset>
-            <legend className="eyebrow mb-3 flex w-full justify-between">
-              <span>Color</span>
-              <span className="text-paper-dim">
-                {color?.name}
-                {color && <span className="ml-2 text-muted">/ {color.tone === "dark" ? "Dark" : "Light"} colorway</span>}
-              </span>
-            </legend>
-            <div className="flex flex-wrap gap-2">
-              {colors.map((c) => {
-                const selected = c.id === colorId;
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => selectColor(c.id)}
-                    aria-pressed={selected}
-                    aria-label={c.name}
-                    title={c.name}
-                    className={`size-9 rounded-full border-2 transition-transform ${
-                      selected ? "scale-110 border-signal" : "border-line hover:border-paper-dim"
-                    }`}
-                    style={{ backgroundColor: c.hex }}
-                  />
-                );
-              })}
-            </div>
-          </fieldset>
-        )}
+          {colors.length > 1 && (
+            <fieldset>
+              <legend className="mb-2.5 uppercase">Color: {color?.name}</legend>
+              <div className="flex flex-wrap gap-2">
+                {colors.map((c) => {
+                  const selected = c.id === colorId;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => selectColor(c.id)}
+                      aria-pressed={selected}
+                      aria-label={c.name}
+                      title={c.name}
+                      className={`size-8 cursor-pointer border p-[3px] ${selected ? "border-paper" : "border-edge hover:border-muted"}`}
+                    >
+                      <span className="block size-full" style={{ backgroundColor: c.hex }} />
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+          )}
 
-        {sizes.length > 0 && (
-          <fieldset>
-            <legend className="eyebrow mb-3 flex w-full justify-between">
-              <span>Size</span>
-              {blank && <span className="text-muted">Chest × Length (in)</span>}
-            </legend>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {sizes.map((s) => {
-                const variant = colorVariants.find((v) => v.sizeId === s.id);
-                const disabled = !variant || !variant.available;
-                const selected = s.id === sizeId;
-                const m = getMeasurement(blank, s.name);
-                return (
+          {sizes.length > 0 && (
+            <fieldset>
+              <legend className="mb-2.5 uppercase">Size: {size?.name ?? "Select"}</legend>
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2">
+                {sizes.map((s) => {
+                  const variant = colorVariants.find((v) => v.sizeId === s.id);
+                  const disabled = !variant || !variant.available;
+                  const selected = s.id === sizeId;
+                  const m = getMeasurement(blank, s.name);
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => setSizeId(selected ? null : s.id)}
+                      aria-pressed={selected}
+                      className={`cursor-pointer whitespace-nowrap border px-2 py-3.5 text-[13px] disabled:cursor-not-allowed disabled:opacity-30 disabled:line-through ${
+                        selected ? "border-paper bg-paper text-ink" : "border-edge hover:border-muted"
+                      }`}
+                    >
+                      {s.name}
+                      {m && ` (${m.chest}" x ${m.length}")`}
+                    </button>
+                  );
+                })}
+              </div>
+              {product.isGarment && <p className="prose-body mt-3 text-muted">{FIT_COPY}</p>}
+            </fieldset>
+          )}
+
+          {/* Checkout routes straight to this item on the Printify Pop-Up store. */}
+          <div className="flex flex-col gap-6">
+            <a
+              href={product.popupUrl}
+              className="border border-paper bg-paper p-5 text-center text-[14px] font-medium uppercase tracking-[0.06em] text-ink hover:border-rust hover:bg-rust hover:text-paper"
+            >
+              Add to cart / {formatPrice(price, true)}
+            </a>
+            <a
+              href={product.popupUrl}
+              className="border border-paper bg-black p-[18px] text-center text-[14px] font-medium hover:bg-panel"
+            >
+              Buy now
+            </a>
+            <p className="label -mt-3 normal-case tracking-normal">
+              {CHECKOUT_NOTE}
+              {(color || size) && (
+                <span className="text-paper"> {[color?.name, size?.name].filter(Boolean).join(" / ")}</span>
+              )}
+            </p>
+          </div>
+
+          {product.isGarment && <PrintProfile activeTone={color?.tone} />}
+
+          <div className="border-t border-line">
+            {panels.map((panel, i) => {
+              const open = openPanel === i;
+              const id = `${product.id}-panel-${i}`;
+              return (
+                <div key={panel.title} className="border-b border-line">
                   <button
-                    key={s.id}
                     type="button"
-                    disabled={disabled}
-                    onClick={() => setSizeId(selected ? null : s.id)}
-                    aria-pressed={selected}
-                    aria-label={`${s.name}${m ? `, chest ${m.chest} inches, length ${m.length} inches` : ""}${disabled ? ", unavailable" : ""}`}
-                    className={`flex flex-col items-center gap-0.5 border px-2 py-2.5 transition-colors disabled:cursor-not-allowed disabled:opacity-30 disabled:line-through ${
-                      selected ? "border-paper bg-paper text-ink" : "border-line hover:border-paper-dim"
-                    }`}
+                    onClick={() => setOpenPanel(open ? -1 : i)}
+                    aria-expanded={open}
+                    aria-controls={id}
+                    className="flex w-full cursor-pointer justify-between py-4 text-left uppercase"
                   >
-                    <span className="text-sm font-semibold">{s.name}</span>
-                    {m && (
-                      <span className={`font-mono text-[0.625rem] ${selected ? "text-ink/70" : "text-muted"}`}>
-                        {formatInches(m.chest)} × {formatInches(m.length)}
-                      </span>
-                    )}
+                    <span>{panel.title}</span>
+                    <span aria-hidden="true">{open ? "-" : "+"}</span>
                   </button>
-                );
-              })}
-            </div>
-            {product.isGarment && (
-              <p className="mt-3 text-sm leading-relaxed text-paper-dim">
-                <span className="eyebrow mr-2 text-paper">Fit</span>
-                {FIT_COPY}
-              </p>
-            )}
-          </fieldset>
-        )}
-
-        {/* Checkout routes straight to this item on the Printify Pop-Up store. */}
-        <div className="flex flex-col gap-3">
-          <a
-            href={product.popupUrl}
-            className="display bg-signal px-6 py-4 text-center text-2xl text-paper transition-colors hover:bg-paper hover:text-ink"
-          >
-            Buy Now
-          </a>
-          <a
-            href={product.popupUrl}
-            className="eyebrow border border-paper px-6 py-3.5 text-center font-semibold transition-colors hover:bg-paper hover:text-ink"
-          >
-            Add to Cart
-          </a>
-          <p className="text-xs leading-relaxed text-muted">
-            {CHECKOUT_NOTE}
-            {(color || selectedVariant) && (
-              <>
-                {" "}Confirm{" "}
-                <span className="text-paper-dim">
-                  {[color?.name, sizes.find((s) => s.id === sizeId)?.name].filter(Boolean).join(" / ")}
-                </span>{" "}
-                on the next page.
-              </>
-            )}
-          </p>
+                  <div id={id} hidden={!open} className="prose-body pb-[18px]">
+                    <p>{panel.body}</p>
+                    {panel.list.length > 0 && (
+                      <ul className="mt-3 list-['–_'] pl-4">
+                        {panel.list.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
+      </section>
 
-        {product.isGarment && <PrintProfile activeTone={color?.tone} />}
-      </div>
-    </div>
+      {stickyBar && (
+        <div className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-[1fr_1.4fr] border-t border-paper bg-ink md:hidden">
+          <a
+            href={product.popupUrl}
+            className="border-r border-paper py-5 text-center uppercase tracking-[0.06em]"
+          >
+            Add to cart
+          </a>
+          <a href={product.popupUrl} className="bg-paper py-5 text-center font-medium uppercase tracking-[0.06em] text-ink">
+            Buy now / {formatPrice(price)}
+          </a>
+        </div>
+      )}
+    </>
   );
 }

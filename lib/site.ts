@@ -6,6 +6,7 @@ function trimSlash(url: string): string {
 
 export const SITE_NAME = "Mosh Pit Athletics";
 
+/** Production domain — canonical tags, OG URLs, JSON-LD ids, sitemap and robots all derive from this. */
 export const SITE_URL = trimSlash(
   process.env.NEXT_PUBLIC_SITE_URL || "https://moshpitathletics.com",
 );
@@ -15,4 +16,4 @@ export const POPUP_URL = trimSlash(
 );
 
 export const SITE_DESCRIPTION =
-  "Small-batch show shirts printed in the USA on Comfort Colors and Shaka Wear blanks with water-based pigment inks.";
+  "Heavyweight cotton, boxy silhouettes, and screen-print culture. Small-batch graphic tees printed to order in the USA.";

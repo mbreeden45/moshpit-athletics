@@ -49,6 +49,24 @@ URLs look like `/products/my-chemical-romance-bat-tee-68ed6fcded926f86860dfb32`.
 The trailing Printify id resolves the product, and a stale title slug
 redirects (308) to the canonical one.
 
+## Design
+
+The layout follows the Claude Design export "Mosh Pit Athletics v2":
+Archivo (variable width, 62–80% stretch) for headlines and IBM Plex Mono at
+13px for everything else. Colors are `#0A0A0A`, `#F5F5F3`, `#8A8A86` and
+`#B5473F`, with 1px `#262626` rules. Design tokens live in `app/globals.css`.
+
+- **Home**: hero, Collection grid (hover shows quick-buy size pills), then the
+  newest tee as a featured product with its Garment Blueprint.
+- **Product page**: gallery plus a sticky buy panel (color, size with inline
+  chest × length, Print Profile, accordion), the Garment Blueprint table, and
+  a fixed buy bar on mobile.
+
+Where the mockup shows things the Pop-Up flow doesn't support (Apple Pay
+buttons, a live bag count, About/Contact pages), the site uses working
+equivalents: "Buy now", a "Bag" link to the Pop-Up, and links to the
+Pop-Up's own Terms and Privacy pages.
+
 ## Scripts
 
 - `npm run dev` / `npm run build` / `npm start`
