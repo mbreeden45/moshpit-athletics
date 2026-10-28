@@ -233,3 +233,90 @@ export async function getBlueprint(blueprintId: number): Promise<PrintifyBluepri
     return null;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Orders (checkout on this site; fulfilled by Printify)
+// ---------------------------------------------------------------------------
+
+export type PrintifyLineItem = { product_id: string; variant_id: number; quantity: number };
+
+export type PrintifyAddress = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  country: string;
+  region: string;
+  address1: string;
+  address2?: string;
+  city: string;
+  zip: string;
+};
+
+/** Printify shipping_method ids. */
+export const SHIPPING_METHOD = { standard: 1, priority: 2 } as const;
+
+async function printifyPost<T>(path: string, body: unknown): Promise<T> {
+  if (!env.printifyToken) throw new PrintifyError("PRINTIFY_API_TOKEN is not set", 401);
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.printifyToken}`,
+      "User-Agent": "MoshPitAthletics-Storefront/1.0",
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new PrintifyError(`Printify ${res.status} on POST ${path}: ${text.slice(0, 500)}`, res.status);
+  }
+  return (await res.json()) as T;
+}
+
+/**
+ * POST /orders/shipping.json — Printify's own shipping cost in cents per method.
+ * US rates are flat by product, so any valid US address quotes the same.
+ */
+export async function quoteShipping(
+  lineItems: PrintifyLineItem[],
+): Promise<{ standard?: number; priority?: number; express?: number }> {
+  const shopId = await resolveShopId();
+  return printifyPost(`/shops/${shopId}/orders/shipping.json`, {
+    line_items: lineItems,
+    address_to: {
+      first_name: "Quote",
+      last_name: "Only",
+      email: "quote@moshpitathletics.com",
+      country: "US",
+      region: "CA",
+      address1: "100 Rose Bowl Dr",
+      city: "Pasadena",
+      zip: "91103",
+    },
+  });
+}
+
+/** POST /orders.json — returns the new Printify order id. */
+export async function createOrder(order: {
+  external_id: string;
+  label: string;
+  line_items: PrintifyLineItem[];
+  shipping_method: number;
+  address_to: PrintifyAddress;
+}): Promise<string> {
+  const shopId = await resolveShopId();
+  const res = await printifyPost<{ id: string }>(`/shops/${shopId}/orders.json`, {
+    ...order,
+    send_shipping_notification: true,
+  });
+  return res.id;
+}
+
+/** POST /orders/{id}/send_to_production.json — Printify charges the order and starts printing. */
+export async function sendToProduction(orderId: string): Promise<void> {
+  const shopId = await resolveShopId();
+  await printifyPost(`/shops/${shopId}/orders/${orderId}/send_to_production.json`, {});
+}

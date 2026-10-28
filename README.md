@@ -1,8 +1,9 @@
 # Mosh Pit Athletics — Storefront
 
 Next.js (App Router) + Tailwind CSS storefront for **moshpitathletics.com**.
-The catalog comes live from the Printify REST API. Checkout happens on the
-Printify Pop-Up store, so this app has no Stripe, cart or order webhooks.
+The catalog comes live from the Printify REST API. Shoppers build a bag on
+this site and pay on Stripe-hosted Checkout; a Stripe webhook then places the
+order with Printify, which prints and ships it.
 
 ## Setup
 
@@ -17,7 +18,10 @@ npm run dev
 | --- | --- | --- |
 | `PRINTIFY_API_TOKEN` | server only | Printify personal access token |
 | `PRINTIFY_SHOP_ID` | server only | Pop-Up shop id (`24807399`). If blank, it's found at runtime via `GET /v1/shops.json` (the `storefront` sales channel) |
-| `NEXT_PUBLIC_POPUP_URL` | public | Pop-Up base URL. Every Buy Now / Add to Cart button points here |
+| `NEXT_PUBLIC_POPUP_URL` | public | Pop-Up base URL (the Archive nav link and the Terms/Privacy footer links) |
+| `STRIPE_SECRET_KEY` | server only | Stripe secret key (`sk_test_…` while testing, `sk_live_…` to sell) |
+| `STRIPE_WEBHOOK_SECRET` | server only | Signing secret (`whsec_…`) of the Stripe webhook endpoint for `/api/stripe/webhook` |
+| `PRINTIFY_TEST_ORDERS` | server only | Test-mode payments only: `off` (default) logs the Printify order; `draft` creates it in Printify without sending it to print |
 | `NEXT_PUBLIC_SITE_URL` | public | Canonical URL for the sitemap, canonical tags and OG cards |
 
 On Vercel, add the same variables under Project → Settings → Environment Variables.
@@ -82,11 +86,38 @@ Archivo (variable width, 62–80% stretch) for headlines and IBM Plex Mono at
   chest × length, Print box, accordion), the Garment Blueprint table, and
   a fixed buy bar on mobile.
 
-Where the mockup shows things the Pop-Up flow doesn't support (Apple Pay
-buttons, a live bag count, About/Contact pages), the site uses working
-equivalents: "Buy now", a "Bag" link to the Pop-Up, links to the Pop-Up's
-own Terms and Privacy pages, and a Contact mailto to
-support@moshpitathletics.com (set in `lib/site.ts`).
+Terms and Privacy still link to the Pop-Up's pages, and Contact is a mailto
+to support@moshpitathletics.com (set in `lib/site.ts`).
+
+## Checkout
+
+1. **Bag** (`components/CartProvider.tsx`, `lib/cart.ts`): lives in the
+   browser's localStorage. Add to cart, Buy now and the catalog cards' size
+   pills all add Printify product + variant ids to it.
+2. **`POST /api/checkout`**: re-prices every line from the live Printify
+   catalog (browser prices are display-only), quotes Printify shipping for the
+   cart (`orders/shipping.json`; US rates are flat), rounds it up to the next
+   dollar, and opens a Stripe Checkout Session: US shipping address, Standard
+   and Express options, Stripe's dynamic payment methods (cards, Apple Pay,
+   Google Pay, Link and others), and the all-sales-final note by the Pay
+   button. Each line carries its Printify ids in product metadata.
+3. **`POST /api/stripe/webhook`** (`checkout.session.completed` and
+   `checkout.session.async_payment_succeeded`): verifies the signature, then
+   `lib/fulfillment.ts` creates the Printify order (external id = Checkout
+   Session id) and sends it to production. Progress and errors are written to
+   the PaymentIntent's metadata (`printify_order_id`, `printify_status`,
+   `printify_error`), so retries resume instead of double-ordering and failures
+   show on the payment in the Stripe dashboard. Non-2xx responses make Stripe
+   retry for up to three days.
+4. **`/order/confirmed`**: reads the session, thanks the buyer and empties the bag.
+
+Test-mode payments never reach print: by default the webhook only logs the
+Printify order it would place (`printify_status: dry-run`); with
+`PRINTIFY_TEST_ORDERS=draft` it creates the order in Printify but doesn't send
+it to production. Live-mode payments always create and send.
+
+Sales tax is not collected yet. To add it, enable Stripe Tax and pass
+`automatic_tax: { enabled: true }` in `app/api/checkout/route.ts`.
 
 ## Scripts
 
