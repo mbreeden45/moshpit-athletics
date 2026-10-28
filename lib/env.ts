@@ -7,6 +7,7 @@ import "server-only";
 export const env = {
   printifyToken: process.env.PRINTIFY_API_TOKEN?.trim() || "",
   printifyShopId: process.env.PRINTIFY_SHOP_ID?.trim() || "",
+  printifyWebhookSecret: process.env.PRINTIFY_WEBHOOK_SECRET?.trim() || "",
   stripeSecretKey: process.env.STRIPE_SECRET_KEY?.trim() || "",
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET?.trim() || "",
   /**
