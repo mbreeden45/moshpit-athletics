@@ -1,5 +1,6 @@
 import type { PrintifyBlueprint, PrintifyProduct } from "./printify";
 import { getBlankSpec, type BlankSpec } from "./blanks";
+import { getGarmentSpec, type GarmentSpec } from "./specs";
 import { POPUP_URL } from "./site";
 
 /**
@@ -33,13 +34,12 @@ export type StorefrontProduct = {
   title: string;
   subtitle: string | null;
   fullTitle: string;
-  descriptionParagraphs: string[];
-  descriptionBullets: string[];
   /** The seller's own words: description paragraphs that aren't the blank's stock copy. */
   story: string[];
-  /** Stock product copy for the Details panel (falls back to the blueprint's). */
-  details: { paragraphs: string[]; bullets: string[] };
-  summary: string;
+  /** Our own spec copy for the blank; Printify's stock text is never shown. */
+  spec: GarmentSpec | null;
+  /** True when the blank is a named brand, which triggers the brand disclaimer. */
+  brandNamed: boolean;
   tags: string[];
   blueprintId: number;
   blank: BlankSpec | null;
@@ -167,11 +167,6 @@ export function parseDescription(html: string): { paragraphs: string[]; bullets:
   return { paragraphs, bullets };
 }
 
-function truncate(s: string, max: number): string {
-  if (s.length <= max) return s;
-  return s.slice(0, max - 1).replace(/\s+\S*$/, "") + "…";
-}
-
 // ---------------------------------------------------------------------------
 // Colour tone → which print profile applies
 // ---------------------------------------------------------------------------
@@ -271,23 +266,15 @@ function artworkKey(p: PrintifyProduct): string {
 
 const normText = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
 
-/** Split a description into the seller's story and the blank's stock copy. */
+/** The seller's own lines from a description, with the blank's stock copy removed. */
 function splitStory(
   own: { paragraphs: string[]; bullets: string[] },
   bp: PrintifyBlueprint | null,
-): { story: string[]; details: { paragraphs: string[]; bullets: string[] } } {
+): string[] {
   const stock = bp ? parseDescription(bp.description) : { paragraphs: [], bullets: [] };
   const stockText = new Set([...stock.paragraphs, ...stock.bullets].map(normText));
   const isStock = (line: string) => stockText.has(normText(line));
-  const story = own.paragraphs.filter((l) => !isStock(l));
-  const paragraphs = own.paragraphs.filter(isStock);
-  return {
-    story,
-    details: {
-      paragraphs: paragraphs.length ? paragraphs : stock.paragraphs,
-      bullets: own.bullets.length ? own.bullets : stock.bullets,
-    },
-  };
+  return own.paragraphs.filter((l) => !isStock(l));
 }
 
 const stripMarks = (s: string) => s.replace(/[®™]/g, "").replace(/\s+/g, " ").trim();
@@ -341,7 +328,7 @@ export function toStorefrontProduct(p: PrintifyProduct, blueprint: PrintifyBluep
   const isGarment = sizes.some((s) => GARMENT_SIZE.test(s.name.trim()));
   const blank = getBlankSpec(p.blueprint_id);
   const kind = productKind(p, blank !== null, blueprint);
-  const { story, details } = splitStory({ paragraphs, bullets }, blueprint);
+  const story = splitStory({ paragraphs, bullets }, blueprint);
   const cardSpec =
     blank?.cardSpec ??
     [kind.one, colors.length > 1 ? `${colors.length} Colorways` : "Made to Order"].join(" / ");
@@ -359,7 +346,6 @@ export function toStorefrontProduct(p: PrintifyProduct, blueprint: PrintifyBluep
 
   const prices = variants.map((v) => v.price);
   const defaultImage = (images.find((i) => i.isDefault) ?? images[0])?.src ?? null;
-  const summarySource = paragraphs[0] ?? subtitle ?? title;
 
   return {
     id: p.id,
@@ -367,11 +353,9 @@ export function toStorefrontProduct(p: PrintifyProduct, blueprint: PrintifyBluep
     title,
     subtitle,
     fullTitle: p.title.replace(/\s+/g, " ").trim(),
-    descriptionParagraphs: paragraphs,
-    descriptionBullets: bullets,
     story,
-    details,
-    summary: truncate(summarySource, 155),
+    spec: getGarmentSpec(p.blueprint_id),
+    brandNamed: Boolean(blueprint?.brand && !/^generic/i.test(blueprint.brand.trim())),
     tags: (p.tags ?? []).filter((t) => !CONTROL_TAG.test(t.trim())),
     blueprintId: p.blueprint_id,
     blank,

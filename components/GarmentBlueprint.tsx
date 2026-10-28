@@ -1,4 +1,5 @@
 import { formatInches, type BlankSpec } from "@/lib/blanks";
+import { BRAND_DISCLAIMER } from "@/lib/specs";
 
 export function GarmentBlueprint({ blank, id }: { blank: BlankSpec; id?: string }) {
   const cells: [string, string][] = [
@@ -46,6 +47,7 @@ export function GarmentBlueprint({ blank, id }: { blank: BlankSpec; id?: string 
           ))}
         </tbody>
       </table>
+      <p className="label mt-4 normal-case tracking-normal">{BRAND_DISCLAIMER}</p>
     </section>
   );
 }

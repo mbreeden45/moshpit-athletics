@@ -79,7 +79,7 @@ function productJsonLd(d: StorefrontDesign) {
     "@type": "Product",
     "@id": `${url}#product`,
     name: d.name,
-    description: [p.subtitle, ...p.descriptionParagraphs].filter(Boolean).join(" ").slice(0, 5000) || d.name,
+    description: [p.subtitle, p.spec?.summary].filter(Boolean).join(" ") || d.name,
     url,
     sku: p.id,
     image: p.images.slice(0, 8).map((i) => i.src),

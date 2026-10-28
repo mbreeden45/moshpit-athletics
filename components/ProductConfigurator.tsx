@@ -7,6 +7,7 @@ import { CARE_COPY, CHECKOUT_NOTE, FIT_COPY, SHIPPING_RETURNS, TOP_BANNER } from
 import type { StorefrontDesign } from "@/lib/designs";
 import { formatPrice, type ProductImage, type StorefrontProduct } from "@/lib/product";
 import { SUPPORT_MAILTO } from "@/lib/site";
+import { BRAND_DISCLAIMER } from "@/lib/specs";
 import { GarmentBlueprint } from "./GarmentBlueprint";
 import { PrintProfile } from "./PrintProfile";
 
@@ -111,19 +112,16 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
     }
   }
 
-  // Style designs swap each style's own story in under the title; the Details panel keeps the stock copy.
+  // Style designs swap each style's own story in under the title.
   const showStory = design.picker === "Style" && product.story.length > 0;
-  const details = showStory
-    ? product.details
-    : { paragraphs: product.descriptionParagraphs, bullets: product.descriptionBullets };
+  const spec = product.spec;
 
-  const panels: { title: string; body: ReactNode; list: string[] }[] = [
+  const panels: { title: string; body: ReactNode; list: string[]; note?: string }[] = [
     {
       title: product.isGarment ? "Garment specs" : "Details",
-      body: blank
-        ? `${blank.fabric}, ${blank.weight}. ${blank.collar}. ${blank.cut}. Printed to order in the USA.`
-        : details.paragraphs.slice(0, 3).join(" ") || "Printed to order in the USA.",
-      list: blank ? [] : details.bullets.slice(0, 8),
+      body: spec?.summary ?? "Printed to order in the USA.",
+      list: spec?.points ?? [],
+      note: spec && product.brandNamed ? BRAND_DISCLAIMER : undefined,
     },
     ...(product.isGarment ? [{ title: "Care", body: CARE_COPY, list: [] }] : []),
     {
@@ -346,6 +344,7 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
                         ))}
                       </ul>
                     )}
+                    {panel.note && <p className="label mt-3 normal-case tracking-normal">{panel.note}</p>}
                   </div>
                 </div>
               );

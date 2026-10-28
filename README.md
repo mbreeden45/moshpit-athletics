@@ -36,6 +36,11 @@ Never commit `.env.local`.
 - **`lib/blanks.ts`**: garment specs keyed by `blueprint_id`.
   `706` is Comfort Colors 1717 and `1716` is Shaka Wear Max Heavyweight.
   Chest × length shows inline on the PDP size buttons.
+- **`lib/specs.ts`**: garment specs written for this site, keyed by `blueprint_id`.
+  They replace Printify's and the manufacturers' stock descriptions everywhere;
+  only facts carry over, and named brands get a not-affiliated disclaimer.
+  Add an entry when you start using a new blank (until then the panel reads
+  "Printed to order in the USA.").
 - **`lib/copy.ts`**: fixed brand copy: banner, fit, shipping/returns, and the Print
   (dark/light colorways plus the ink notice). Each color's swatch luminance
   picks which profile is highlighted.
