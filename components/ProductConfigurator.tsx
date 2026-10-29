@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { getMeasurement } from "@/lib/blanks";
 import type { CartItem } from "@/lib/cart";
-import { CARE_COPY, CHECKOUT_NOTE, FIT_COPY, SHIPPING_RETURNS, TOP_BANNER } from "@/lib/copy";
+import { CARE_COPY, CHECKOUT_NOTE, FIT_COPY, PRINT_METHOD_COPY, SHIPPING_RETURNS, TOP_BANNER } from "@/lib/copy";
 import type { StorefrontDesign } from "@/lib/designs";
 import { formatPrice, type ProductImage, type StorefrontProduct } from "@/lib/product";
 import { SUPPORT_MAILTO } from "@/lib/site";
@@ -165,7 +165,11 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
     {
       title: product.isGarment ? "Garment specs" : "Details",
       body: spec?.summary ?? "Printed to order in the USA.",
-      list: spec?.points ?? [],
+      // Prints' spec copy already covers their inks.
+      list: [
+        ...product.printMethods.filter((m) => m !== "digital").map((m) => PRINT_METHOD_COPY[m]),
+        ...(spec?.points ?? []),
+      ],
       note: spec && product.brandNamed ? BRAND_DISCLAIMER : undefined,
     },
     ...(product.isGarment ? [{ title: "Care", body: CARE_COPY, list: [] }] : []),
@@ -371,7 +375,10 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
             </p>
           </div>
 
-          {product.isGarment && <PrintProfile activeTone={color?.tone} />}
+          {/* The light/dark print box only describes DTG. */}
+          {product.isGarment && product.printMethods.length === 1 && product.printMethods[0] === "dtg" && (
+            <PrintProfile activeTone={color?.tone} />
+          )}
 
           <div className="border-t border-line">
             {panels.map((panel, i) => {

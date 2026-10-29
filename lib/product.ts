@@ -28,6 +28,9 @@ export type ProductImage = {
 
 export type ProductKind = { one: string; many: string };
 
+/** How the design is applied, from Printify's catalog (per print area). */
+export type PrintMethod = "dtg" | "embroidery" | "dtf" | "digital";
+
 export type StorefrontProduct = {
   id: string;
   slug: string;
@@ -36,6 +39,8 @@ export type StorefrontProduct = {
   fullTitle: string;
   /** The seller's own words: description paragraphs that aren't the blank's stock copy. */
   story: string[];
+  /** Decoration methods actually used by this product's artwork. */
+  printMethods: PrintMethod[];
   /** Our own spec copy for the blank; Printify's stock text is never shown. */
   spec: GarmentSpec | null;
   /** True when the blank is a named brand, which triggers the brand disclaimer. */
@@ -289,7 +294,31 @@ function blankLabel(blank: BlankSpec | null, bp: PrintifyBlueprint | null, kind:
   return title.toLowerCase().startsWith(brand.toLowerCase()) ? title : `${brand} ${title}`;
 }
 
-export function toStorefrontProduct(p: PrintifyProduct, blueprint: PrintifyBlueprint | null = null): StorefrontProduct {
+const METHOD_ALIASES: Record<string, PrintMethod> = {
+  dtg: "dtg",
+  embroidery: "embroidery",
+  dtf: "dtf",
+  "digital-printing": "digital",
+};
+
+/** Methods for the print areas that actually carry artwork. */
+function printMethods(p: PrintifyProduct, byPosition: Record<string, string>): PrintMethod[] {
+  const found = new Set<PrintMethod>();
+  for (const area of p.print_areas ?? []) {
+    for (const ph of area.placeholders) {
+      if (ph.images.length === 0) continue;
+      const method = METHOD_ALIASES[byPosition[ph.position] ?? ""];
+      if (method) found.add(method);
+    }
+  }
+  return [...found];
+}
+
+export function toStorefrontProduct(
+  p: PrintifyProduct,
+  blueprint: PrintifyBlueprint | null = null,
+  decorationMethods: Record<string, string> = {},
+): StorefrontProduct {
   const { title, subtitle } = splitTitle(p.title);
   const { paragraphs, bullets } = parseDescription(p.description || "");
 
@@ -354,6 +383,7 @@ export function toStorefrontProduct(p: PrintifyProduct, blueprint: PrintifyBluep
     subtitle,
     fullTitle: p.title.replace(/\s+/g, " ").trim(),
     story,
+    printMethods: printMethods(p, decorationMethods),
     spec: getGarmentSpec(p.blueprint_id),
     brandNamed: Boolean(blueprint?.brand && !/^generic/i.test(blueprint.brand.trim())),
     tags: (p.tags ?? []).filter((t) => !CONTROL_TAG.test(t.trim())),

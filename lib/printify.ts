@@ -220,6 +220,30 @@ export async function getProduct(productId: string): Promise<PrintifyProduct | n
   }
 }
 
+/**
+ * GET /v1/catalog/blueprints/{id}/print_providers/{pid}/variants.json —
+ * the decoration method of each print area ("front" → "dtg", "front_embroidery"
+ * → "embroidery", …). Empty on failure.
+ */
+export async function getDecorationMethods(blueprintId: number, providerId: number): Promise<Record<string, string>> {
+  if (!env.printifyToken) return {};
+  try {
+    const res = await printifyFetch<{
+      variants: { placeholders: { position: string; decoration_method?: string }[] }[];
+    }>(`/catalog/blueprints/${blueprintId}/print_providers/${providerId}/variants.json`);
+    const methods: Record<string, string> = {};
+    for (const v of res.variants) {
+      for (const ph of v.placeholders) {
+        if (ph.decoration_method) methods[ph.position] ??= ph.decoration_method;
+      }
+    }
+    return methods;
+  } catch (err) {
+    console.warn(`[printify] Decoration methods for ${blueprintId}/${providerId} failed:`, err);
+    return {};
+  }
+}
+
 /** GET /v1/catalog/blueprints/{id}.json — the blank's brand and model; null on failure. */
 export async function getBlueprint(blueprintId: number): Promise<PrintifyBlueprint | null> {
   if (!env.printifyToken) return null;

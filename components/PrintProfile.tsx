@@ -25,7 +25,15 @@ export function PrintProfile({ activeTone }: { activeTone?: Tone }) {
           </div>
         );
       })}
-      <p className="border-t border-line pt-3 text-[12px] uppercase leading-[1.6]">{PRINT_PROFILE.notice}</p>
+      <p className="flex flex-wrap gap-x-2 border-t border-line pt-3 text-[12px] uppercase leading-[1.6]">
+        {PRINT_PROFILE.facts.map((fact, i) => (
+          <span key={fact} className="whitespace-nowrap">
+            {i > 0 && "· "}
+            {fact}
+          </span>
+        ))}
+      </p>
+      <p className="label -mt-3 normal-case tracking-normal">{PRINT_PROFILE.notice}</p>
     </section>
   );
 }

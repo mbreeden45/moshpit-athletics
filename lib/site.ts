@@ -36,4 +36,4 @@ export const SUPPORT_EMAIL = "support@moshpitathletics.com";
 export const SUPPORT_MAILTO = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Order Inquiry")}`;
 
 export const SITE_DESCRIPTION =
-  "Heavyweight cotton, boxy silhouettes, and screen-print culture. Small-batch graphic tees printed to order in the USA.";
+  "Heavyweight cotton, boxy silhouettes, and graphics printed straight into the fabric. Graphic tees made to order in the USA.";

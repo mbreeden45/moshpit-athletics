@@ -3,6 +3,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { JsonLd } from "@/components/JsonLd";
 import { ProductConfigurator } from "@/components/ProductConfigurator";
 import { getDesignBySlug, getDesigns } from "@/lib/catalog";
+import { PRINT_METHOD_COPY } from "@/lib/copy";
 import type { StorefrontDesign } from "@/lib/designs";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
@@ -61,9 +62,10 @@ function metaDescription(d: StorefrontDesign): string {
   const parts = [
     p.subtitle && (/[.!?]$/.test(p.subtitle) ? p.subtitle : `${p.subtitle}.`),
     p.blank ? `${p.blank.name}, ${p.blank.weight} ${p.blank.fabric.toLowerCase()}.` : null,
-    d.products.length > 1 ? `Available on ${d.products.length} blanks.` : null,
+    d.products.length > 1 ? `Available in ${d.products.length} ${d.picker === "Style" ? "styles" : "blanks"}.` : null,
     p.colors.length > 1 ? `${p.colors.length} colorways.` : null,
-    p.isGarment ? "Water-based pigment print, made to order in the USA." : "Made to order in the USA.",
+    ...p.printMethods.map((m) => PRINT_METHOD_COPY[m]),
+    "Made to order in the USA.",
   ].filter(Boolean);
   const text = parts.join(" ");
   return text.length > 160 ? text.slice(0, 157).replace(/\s+\S*$/, "") + "…" : text;

@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { groupDesigns, type StorefrontDesign } from "./designs";
-import { getBlueprint, getProducts } from "./printify";
+import { getBlueprint, getDecorationMethods, getProducts } from "./printify";
 import { idFromSlug, toStorefrontProduct, type StorefrontProduct } from "./product";
 
 /** Server-side data access used by pages, sitemap and metadata. */
@@ -9,11 +9,24 @@ import { idFromSlug, toStorefrontProduct, type StorefrontProduct } from "./produ
 export const getCatalog = cache(async (): Promise<StorefrontProduct[]> => {
   const products = await getProducts();
   const blueprintIds = [...new Set(products.map((p) => p.blueprint_id))];
-  const blueprints = new Map(
-    await Promise.all(blueprintIds.map(async (id) => [id, await getBlueprint(id)] as const)),
-  );
+  const providerKeys = [...new Set(products.map((p) => `${p.blueprint_id}/${p.print_provider_id}`))];
+  const [blueprints, methods] = await Promise.all([
+    Promise.all(blueprintIds.map(async (id) => [id, await getBlueprint(id)] as const)).then((e) => new Map(e)),
+    Promise.all(
+      providerKeys.map(async (key) => {
+        const [bp, pp] = key.split("/").map(Number);
+        return [key, await getDecorationMethods(bp, pp)] as const;
+      }),
+    ).then((e) => new Map(e)),
+  ]);
   return products
-    .map((p) => toStorefrontProduct(p, blueprints.get(p.blueprint_id) ?? null))
+    .map((p) =>
+      toStorefrontProduct(
+        p,
+        blueprints.get(p.blueprint_id) ?? null,
+        methods.get(`${p.blueprint_id}/${p.print_provider_id}`) ?? {},
+      ),
+    )
     .filter((p) => p.variants.length > 0)
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 });
