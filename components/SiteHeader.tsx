@@ -4,7 +4,7 @@ import { BagButton } from "./CartProvider";
 
 const NAV = [
   { label: "Catalog", href: "/#collection" },
-  { label: "New Drops", href: "/#featured" },
+  { label: "Latest", href: "/#featured" },
   { label: "Blueprint", href: "/#blueprint" },
   { label: "Archive", href: `${POPUP_URL}/products` },
 ];
