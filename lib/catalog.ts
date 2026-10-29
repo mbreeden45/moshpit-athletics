@@ -28,7 +28,8 @@ export const getCatalog = cache(async (): Promise<StorefrontProduct[]> => {
       ),
     )
     .filter((p) => p.variants.length > 0)
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+    // Newest first by creation date, so editing a product doesn't re-list it as new.
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 });
 
 /** One entry per artwork, each carrying every blank it's printed on. */

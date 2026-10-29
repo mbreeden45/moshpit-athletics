@@ -73,6 +73,9 @@ export type StorefrontProduct = {
   images: ProductImage[];
   defaultImage: string | null;
   popupUrl: string;
+  /** When the product was first created in Printify: what "newest" means. */
+  createdAt: string;
+  /** Last edit in Printify (sitemap freshness only; edits don't make a product new). */
   updatedAt: string;
 };
 
@@ -407,6 +410,7 @@ export function toStorefrontProduct(
     images,
     defaultImage,
     popupUrl: getPopupProductUrl(p),
+    createdAt: p.created_at,
     updatedAt: p.updated_at,
   };
 }

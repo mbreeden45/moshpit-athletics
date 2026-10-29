@@ -3,13 +3,13 @@
  * House rule: no gym clichés, fitness slogans, barbells or workouts.
  */
 
-export const TOP_BANNER = "Drop 07 / Printed to order in the USA";
+export const TOP_BANNER = "Printed to order in the USA";
 
 export const HERO = {
   headline: "Heavyweight graphics.",
   subhead: "Zero gimmicks.",
   body: "Heavyweight cotton, boxy silhouettes, and graphics printed straight into the fabric. Made to order in the USA.",
-  cta: "Shop latest drop",
+  cta: "Shop the latest",
 };
 
 export const FIT_COPY =

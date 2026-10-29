@@ -9,7 +9,7 @@ export const revalidate = 3600;
 
 export default async function HomePage() {
   const designs = await getDesigns();
-  // Newest tee on a spec'd blank leads the "New Drops" feature; else newest design.
+  // Newest tee on a spec'd blank leads the "Latest" feature; else newest design.
   const featured = designs.find((d) => d.products[0].blank) ?? designs[0] ?? null;
 
   const itemListLd = {
@@ -56,7 +56,7 @@ export default async function HomePage() {
 
         {designs.length === 0 ? (
           <p className="border border-line px-6 py-16 text-center uppercase text-muted">
-            Next drop is on press. Check back soon.
+            New designs are on press. Check back soon.
           </p>
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-px border border-line bg-line">

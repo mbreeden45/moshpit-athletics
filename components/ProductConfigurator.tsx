@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { getMeasurement } from "@/lib/blanks";
 import type { CartItem } from "@/lib/cart";
-import { CARE_COPY, CHECKOUT_NOTE, FIT_COPY, PRINT_METHOD_COPY, SHIPPING_RETURNS, TOP_BANNER } from "@/lib/copy";
+import { CARE_COPY, CHECKOUT_NOTE, FIT_COPY, PRINT_METHOD_COPY, SHIPPING_RETURNS } from "@/lib/copy";
 import type { StorefrontDesign } from "@/lib/designs";
 import { formatPrice, type ProductImage, type StorefrontProduct } from "@/lib/product";
 import { SUPPORT_MAILTO } from "@/lib/site";
@@ -15,7 +15,6 @@ import { PrintProfile } from "./PrintProfile";
 
 const POSITION_ORDER = ["front", "back", "folded", "left_sleeve", "right_sleeve", "other"];
 const MAX_GALLERY = 7;
-const DROP_LABEL = TOP_BANNER.split("/")[0].trim(); // "Drop 07"
 
 function sortImages(images: ProductImage[]): ProductImage[] {
   const rank = (p: string) => {
@@ -220,7 +219,7 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
         {/* Buy panel */}
         <div className="flex flex-[1_1_420px] flex-col gap-6 border-line px-4 py-10 sm:px-8 lg:sticky lg:top-[60px] lg:border-l">
           <p className="uppercase text-rust">
-            {DROP_LABEL} / {product.kind.many}
+            {product.kind.many}
           </p>
           <div>
             <Heading className="headline-xl text-[clamp(56px,6vw,96px)] leading-[0.88]">{design.name}</Heading>
