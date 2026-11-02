@@ -10,6 +10,7 @@ import { formatPrice, type ProductImage, type StorefrontProduct } from "@/lib/pr
 import { SUPPORT_MAILTO } from "@/lib/site";
 import { BRAND_DISCLAIMER } from "@/lib/specs";
 import { useCart } from "./CartProvider";
+import { EtsyRating } from "./EtsyRating";
 import { GarmentBlueprint } from "./GarmentBlueprint";
 import { PrintProfile } from "./PrintProfile";
 
@@ -232,9 +233,12 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
               ))}
             </div>
           )}
-          <p className="text-[24px]" aria-live="polite">
-            {priceLabel}
-          </p>
+          <div className="flex flex-col gap-2">
+            <p className="text-[24px]" aria-live="polite">
+              {priceLabel}
+            </p>
+            <EtsyRating />
+          </div>
 
           {design.products.length > 1 && design.picker === "Style" && (
             <div>

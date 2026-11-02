@@ -24,7 +24,7 @@ export const SITE_NAME = "Mosh Pit Athletics";
 /** Production domain — canonical tags, OG URLs, JSON-LD ids, sitemap and robots all derive from this. */
 export const SITE_URL = normalizeUrl(
   process.env.NEXT_PUBLIC_SITE_URL,
-  "https://moshpitathletics.com",
+  "https://www.moshpitathletics.com",
 );
 
 export const POPUP_URL = normalizeUrl(
@@ -37,3 +37,14 @@ export const SUPPORT_MAILTO = `mailto:${SUPPORT_EMAIL}?subject=${encodeURICompon
 
 export const SITE_DESCRIPTION =
   "Heavyweight cotton, boxy silhouettes, and graphics printed straight into the fabric. Graphic tees made to order in the USA.";
+
+/**
+ * Etsy shop rating, shown as a linked badge (never as structured data: Google
+ * doesn't allow marking up reviews collected on another site). The badge stays
+ * hidden until both numbers are filled in; keep them current with the shop.
+ */
+export const ETSY_REVIEWS: { url: string; rating: number | null; count: number | null } = {
+  url: "https://www.etsy.com/shop/MoshPitAthletics#reviews",
+  rating: null,
+  count: null,
+};
