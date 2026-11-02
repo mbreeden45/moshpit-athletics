@@ -45,6 +45,6 @@ export const SITE_DESCRIPTION =
  */
 export const ETSY_REVIEWS: { url: string; rating: number | null; count: number | null } = {
   url: "https://www.etsy.com/shop/MoshPitAthletics#reviews",
-  rating: null,
-  count: null,
+  rating: 5.0,
+  count: 23,
 };
