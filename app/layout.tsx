@@ -49,6 +49,12 @@ const organizationLd = {
   name: SITE_NAME,
   url: SITE_URL,
   sameAs: [POPUP_URL],
+  // Store-wide policy for Google merchant listings: printed to order, final sale.
+  hasMerchantReturnPolicy: {
+    "@type": "MerchantReturnPolicy",
+    applicableCountry: "US",
+    returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -4,6 +4,7 @@ import { MAX_LINES, MAX_QUANTITY } from "@/lib/cart";
 import { getCatalog, getDesigns } from "@/lib/catalog";
 import { STRIPE_SUBMIT_NOTE } from "@/lib/copy";
 import { quoteShipping, SHIPPING_METHOD, type PrintifyLineItem } from "@/lib/printify";
+import { roundUpDollar } from "@/lib/shipping";
 import { getStripe } from "@/lib/stripe";
 
 /**
@@ -30,9 +31,6 @@ function parseItems(body: unknown): RequestItem[] | null {
   }
   return parsed;
 }
-
-/** Round shipping up to the next whole dollar. */
-const roundUpDollar = (cents: number) => Math.ceil(cents / 100) * 100;
 
 function shippingOption(
   label: string,
@@ -112,6 +110,8 @@ export async function POST(req: NextRequest) {
       mode: "payment",
       line_items: lineItems,
       shipping_address_collection: { allowed_countries: ["US"] },
+      // Several Printify print providers require a phone number on the order.
+      phone_number_collection: { enabled: true },
       shipping_options: shippingOptions,
       custom_text: { submit: { message: STRIPE_SUBMIT_NOTE } },
       success_url: `${origin}/order/confirmed?session_id={CHECKOUT_SESSION_ID}`,

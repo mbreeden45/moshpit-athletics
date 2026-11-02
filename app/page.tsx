@@ -1,4 +1,5 @@
 import { JsonLd } from "@/components/JsonLd";
+import { EtsyRating } from "@/components/EtsyRating";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductConfigurator } from "@/components/ProductConfigurator";
 import { getDesigns } from "@/lib/catalog";
@@ -36,7 +37,10 @@ export default async function HomePage() {
           <span className="text-muted">{HERO.subhead}</span>
         </h1>
         <div className="mt-16 flex flex-wrap items-end justify-between gap-10">
-          <p className="max-w-[460px] text-[15px] leading-[1.6] tracking-normal text-body">{HERO.body}</p>
+          <div className="flex max-w-[460px] flex-col gap-3">
+            <p className="text-[15px] leading-[1.6] tracking-normal text-body">{HERO.body}</p>
+            <EtsyRating />
+          </div>
           <a
             href="#collection"
             className="border border-paper bg-paper px-9 py-5 font-medium uppercase text-ink hover:bg-ink hover:text-paper"

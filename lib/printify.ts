@@ -280,7 +280,8 @@ export type PrintifyAddress = {
 /** Printify shipping_method ids. */
 export const SHIPPING_METHOD = { standard: 1, priority: 2 } as const;
 
-async function printifyPost<T>(path: string, body: unknown): Promise<T> {
+/** POST. `cached` keeps the response in the data cache for an hour (read-only quotes on static pages). */
+async function printifyPost<T>(path: string, body: unknown, cached = false): Promise<T> {
   if (!env.printifyToken) throw new PrintifyError("PRINTIFY_API_TOKEN is not set", 401);
   const res = await fetch(`${API_BASE}${path}`, {
     method: "POST",
@@ -291,7 +292,7 @@ async function printifyPost<T>(path: string, body: unknown): Promise<T> {
       Accept: "application/json",
     },
     body: JSON.stringify(body),
-    cache: "no-store",
+    ...(cached ? { next: { revalidate: REVALIDATE_SECONDS, tags: ["printify"] } } : { cache: "no-store" as const }),
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -306,6 +307,7 @@ async function printifyPost<T>(path: string, body: unknown): Promise<T> {
  */
 export async function quoteShipping(
   lineItems: PrintifyLineItem[],
+  { cached = false }: { cached?: boolean } = {},
 ): Promise<{ standard?: number; priority?: number; express?: number }> {
   const shopId = await resolveShopId();
   return printifyPost(`/shops/${shopId}/orders/shipping.json`, {
@@ -314,13 +316,15 @@ export async function quoteShipping(
       first_name: "Quote",
       last_name: "Only",
       email: "quote@moshpitathletics.com",
+      // Some print providers reject quotes without a phone (555-01xx is reserved for examples).
+      phone: "3105550100",
       country: "US",
       region: "CA",
       address1: "100 Rose Bowl Dr",
       city: "Pasadena",
       zip: "91103",
     },
-  });
+  }, cached);
 }
 
 /** POST /orders.json — returns the new Printify order id. */
