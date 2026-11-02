@@ -1,32 +1,17 @@
 import Link from "next/link";
-import { POPUP_URL, SITE_NAME } from "@/lib/site";
+import { SITE_NAME } from "@/lib/site";
 import { BagButton } from "./CartProvider";
-
-const NAV = [
-  { label: "Catalog", href: "/#collection" },
-  { label: "Latest", href: "/#featured" },
-  { label: "Blueprint", href: "/#blueprint" },
-  { label: "Archive", href: `${POPUP_URL}/products` },
-];
 
 export function SiteHeader() {
   return (
-    <header className="site-header sticky top-0 z-30 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-b border-line bg-ink/95 px-4 py-4 backdrop-blur-[6px] sm:px-8">
+    <header className="site-header relative flex justify-center px-4 pb-10 pt-11 sm:pb-16 sm:pt-6">
       <Link
         href="/"
-        className="font-display text-[20px] font-extrabold uppercase tracking-[-0.01em] [font-stretch:75%] hover:text-rust"
+        className="font-display text-[26px] font-black uppercase leading-none tracking-[-0.01em] [font-stretch:62%] [word-spacing:0.08em] sm:text-[32px]"
       >
         {SITE_NAME}
       </Link>
-      <nav aria-label="Primary" className="order-3 flex w-full flex-wrap gap-x-6 gap-y-2 sm:gap-x-8 uppercase md:order-none md:w-auto">
-        {NAV.map((item) => (
-          <Link key={item.label} href={item.href} className="hover:text-rust">
-            {item.label}
-          </Link>
-        ))}
-      </nav>
-      <div className="flex gap-5 uppercase">
-        <span className="text-muted">USD</span>
+      <div className="absolute right-4 top-4">
         <BagButton />
       </div>
     </header>

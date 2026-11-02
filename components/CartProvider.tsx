@@ -123,50 +123,52 @@ export function CartProvider({ children }: { children: ReactNode }) {
             type="button"
             aria-label="Close bag"
             onClick={() => setIsOpen(false)}
-            className="absolute inset-0 cursor-default bg-black/60"
+            className="absolute inset-0 cursor-default bg-white/70"
           />
           <aside
             role="dialog"
             aria-modal="true"
             aria-labelledby="bag-heading"
-            className="relative flex h-full w-full max-w-[440px] flex-col border-l border-line bg-ink"
+            className="relative flex h-full w-full max-w-[380px] flex-col border-l border-fg bg-bg"
           >
-            <div className="flex items-center justify-between border-b border-line px-5 py-4 uppercase">
-              <h2 id="bag-heading">Bag ({value.count})</h2>
-              <button type="button" onClick={() => setIsOpen(false)} className="cursor-pointer hover:text-rust">
-                Close
+            <div className="flex items-center justify-between px-4 py-4">
+              <h2 id="bag-heading" className="font-bold">
+                bag ({value.count})
+              </h2>
+              <button type="button" onClick={() => setIsOpen(false)} className="link cursor-pointer">
+                close
               </button>
             </div>
 
             {items.length === 0 ? (
-              <p className="px-5 py-10 uppercase text-muted">Your bag is empty.</p>
+              <p className="px-4 py-10 text-muted">your bag is empty.</p>
             ) : (
               <ul className="flex-1 overflow-y-auto">
                 {items.map((item) => (
-                  <li key={`${item.productId}-${item.variantId}`} className="flex gap-4 border-b border-line px-5 py-4">
-                    <div className="relative size-20 shrink-0 overflow-hidden bg-panel-light">
-                      {item.image && <Image src={item.image} alt="" fill sizes="80px" className="object-cover" />}
+                  <li key={`${item.productId}-${item.variantId}`} className="flex gap-3 border-t border-faint px-4 py-3">
+                    <div className="relative size-16 shrink-0 overflow-hidden bg-panel">
+                      {item.image && <Image src={item.image} alt="" fill sizes="64px" className="object-cover" />}
                     </div>
-                    <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
                       <Link
                         href={`/products/${item.slug}`}
                         onClick={() => setIsOpen(false)}
-                        className="font-display text-[17px] font-bold uppercase leading-[1.1] [font-stretch:80%] hover:text-rust"
+                        className="link"
                       >
                         {item.name}
                       </Link>
-                      <p className="label normal-case tracking-normal">{item.detail}</p>
+                      <p className="font-bold">{item.detail}</p>
                       <div className="mt-auto flex items-center justify-between">
-                        <div className="flex items-center border border-edge">
+                        <div className="flex items-center gap-2">
                           <button
                             type="button"
                             aria-label={`Remove one ${item.name}`}
                             onClick={() => value.setQuantity(item.productId, item.variantId, item.quantity - 1)}
-                            className="cursor-pointer px-2.5 py-1 hover:text-rust"
+                            className="cursor-pointer px-1"
                           >
                             −
                           </button>
-                          <span className="min-w-6 text-center" aria-live="polite">
+                          <span className="min-w-4 text-center" aria-live="polite">
                             {item.quantity}
                           </span>
                           <button
@@ -174,7 +176,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
                             aria-label={`Add one ${item.name}`}
                             disabled={item.quantity >= MAX_QUANTITY}
                             onClick={() => value.setQuantity(item.productId, item.variantId, item.quantity + 1)}
-                            className="cursor-pointer px-2.5 py-1 hover:text-rust disabled:cursor-not-allowed disabled:opacity-30"
+                            className="cursor-pointer px-1 disabled:cursor-not-allowed disabled:opacity-30"
                           >
                             +
                           </button>
@@ -187,25 +189,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
               </ul>
             )}
 
-            <div className="mt-auto flex flex-col gap-4 border-t border-line px-5 py-5">
+            <div className="mt-auto flex flex-col gap-3 border-t border-faint px-4 py-4">
               {error && (
-                <p role="alert" className="text-rust">
+                <p role="alert" className="text-accent">
                   {error}
                 </p>
               )}
-              <div className="flex justify-between uppercase">
-                <span>Subtotal</span>
+              <div className="flex justify-between font-bold">
+                <span>subtotal</span>
                 <span>{formatPrice(subtotal, true)}</span>
               </div>
-              <p className="label normal-case tracking-normal">{CART_NOTE}</p>
-              <button
-                type="button"
-                disabled={items.length === 0 || pending}
-                onClick={() => void checkout(items)}
-                className="cursor-pointer border border-paper bg-paper p-5 text-center text-[14px] font-medium uppercase tracking-[0.06em] text-ink hover:border-rust hover:bg-rust hover:text-paper disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {pending ? "Opening checkout…" : "Checkout"}
-              </button>
+              <p className="text-muted">{CART_NOTE}</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  disabled={items.length === 0 || pending}
+                  onClick={() => void checkout(items)}
+                  className="btn bg-accent text-white hover:brightness-110"
+                >
+                  {pending ? "opening…" : "checkout now"}
+                </button>
+                <button type="button" onClick={() => setIsOpen(false)} className="btn bg-fg text-bg hover:opacity-85">
+                  keep shopping
+                </button>
+              </div>
             </div>
           </aside>
         </div>
@@ -214,12 +221,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/** Header "Bag (n)" button. */
+/** Header "bag (n)" button. */
 export function BagButton() {
   const { count, open } = useCart();
   return (
-    <button type="button" onClick={open} className="cursor-pointer uppercase hover:text-rust">
-      Bag{count > 0 && ` (${count})`}
+    <button type="button" onClick={open} className="link cursor-pointer">
+      bag{count > 0 && ` (${count})`}
     </button>
   );
 }
