@@ -7,7 +7,7 @@ import { formatInches } from "@/lib/blanks";
 import type { CartItem } from "@/lib/cart";
 import { CARE_COPY, FIT_COPY, PDP_NOTE, PRINT_METHOD_COPY, PRINT_PROFILE, SHIPPING_RETURNS } from "@/lib/copy";
 import type { StorefrontDesign } from "@/lib/designs";
-import { formatPrice, type ProductImage, type StorefrontProduct } from "@/lib/product";
+import { formatPrice, storySections, type ProductImage, type StorefrontProduct } from "@/lib/product";
 import { SUPPORT_MAILTO } from "@/lib/site";
 import { BRAND_DISCLAIMER } from "@/lib/specs";
 import { useCart } from "./CartProvider";
@@ -172,11 +172,11 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
   }
 
   const spec = product.spec;
-  // Style designs carry each style's own words; everything else gets the blank's spec summary.
-  const description = [
-    ...(design.picker === "Style" ? product.story : []),
-    spec?.summary ?? "Printed to order in the USA.",
-  ];
+  // The seller's words about the design lead; without them, the blank's spec summary stands in.
+  const { about, notes } = storySections(product.story);
+  const description = about.length > 0 ? about : [spec?.summary ?? "Printed to order in the USA."];
+  // When the story fills the description, the blank's summary moves into details.
+  const blankSummary = about.length > 0 ? spec?.summary : undefined;
   const specPoints = [
     // Prints' spec copy already covers their inks.
     ...product.printMethods.filter((m) => m !== "digital").map((m) => PRINT_METHOD_COPY[m]),
@@ -307,7 +307,7 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
         )}
 
         {/* Desktop: swatches sit above the price */}
-        <div className="max-md:hidden">{colorPicker}</div>
+        {colorPicker && <div className="max-md:hidden">{colorPicker}</div>}
 
         <div className="flex flex-col gap-1 max-md:hidden">
           <p className="text-[16px]" aria-live="polite">
@@ -380,6 +380,14 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
 
         <div className="border-b border-faint max-md:order-9">
           <Info title="details">
+            {notes.length > 0 && (
+              <ul className="list-['–_'] pl-3">
+                {notes.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            )}
+            {blankSummary && <p>{blankSummary}</p>}
             {specPoints.length > 0 && (
               <ul className="list-['–_'] pl-3">
                 {specPoints.map((item) => (

@@ -69,8 +69,13 @@ Never commit `.env.local`.
   names come from the `DESIGN_NAMES` map, then the product
   title. Shaka Wear leads, then Comfort Colors, then the rest. When a group mixes
   artwork (the Pasadena caps), the picker becomes a Style dropdown labelled from
-  `STYLE_NAMES`, and each style's own description text (whatever isn't the
-  blank's stock Printify copy) shows under the title and swaps with the pick.
+  `STYLE_NAMES`.
+- **Descriptions**: each product's own Printify description text (whatever
+  isn't the blank's stock Printify copy) is the description on its page, and
+  swaps with the Blank/Style pick. Lines after a "Details:" heading go into
+  the collapsed details panel, along with the blank's spec summary. The first
+  paragraph also leads the meta description and the JSON-LD description.
+  Products without their own text show the blank's spec summary instead.
 - **SEO**: each PDP has `generateMetadata` (canonical URL, OG/Twitter
   cards, price meta) plus `Product` and `BreadcrumbList` JSON-LD. There's
   `app/sitemap.ts` (with image entries) and `app/robots.ts`, which blocks
