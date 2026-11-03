@@ -330,8 +330,34 @@ function sentences(paragraph: string): string[] {
 }
 
 /**
- * The seller's own lines from a description: the blank's stock copy removed,
- * and any sentence that names the blank dropped (paragraphs left empty go too).
+ * Etsy-only offers: messaging the seller, custom or case-by-case orders.
+ * This site can't take those, so sentences with them are dropped.
+ */
+const ETSY_ONLY =
+  /\b(message (me|us)|send (me|us) a message|(dm|pm) (me|us)|contact me|reach out|custom\w*|case[- ]by[- ]case|personali[sz]\w*|etsy)\b/i;
+
+/**
+ * Removes the word "replica" ("Philly 2025 Replica" → "Philly 2025"), which
+ * can read as a copy of official band merch; "a replica of X" becomes
+ * "inspired by X".
+ */
+export function dropReplica(text: string): string {
+  const out = text
+    // Dropping only the word would make it read as the official shirt.
+    .replace(/\b((a|an)\s+)?replicas?\s+of\b/gi, "inspired by")
+    .replace(/\s*\breplicas?\b/gi, "")
+    .replace(/\s+([,.;:!?])/g, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  // Keep a leading capital: "A replica of the tour tee" → "Inspired by the tour tee".
+  return /^[A-Z]/.test(text.trim()) ? out.charAt(0).toUpperCase() + out.slice(1) : out;
+}
+
+/**
+ * The seller's own lines from a description, cleaned for this site: the
+ * blank's stock copy removed, sentences that name the blank or offer
+ * Etsy-only services dropped, "replica" removed, and paragraphs left empty
+ * dropped.
  */
 function splitStory(
   own: { paragraphs: string[]; bullets: string[] },
@@ -343,9 +369,28 @@ function splitStory(
   const isStock = (line: string) => stockText.has(normText(line)) || STOCK_HINT.test(line);
   const namesBlank = blankMention(bp, blank);
   return own.paragraphs
-    .filter((l) => !isStock(l))
-    .map((l) => sentences(l).filter((sentence) => !namesBlank.test(sentence)).join(" "))
+    .map((l) => l.replace(/\*\*|__/g, "").trim()) // Markdown bold pasted from Etsy
+    .filter((l) => l && !isStock(l))
+    .map((l) =>
+      sentences(l)
+        .filter((sentence) => !namesBlank.test(sentence) && !ETSY_ONLY.test(sentence))
+        .map(dropReplica)
+        .filter(Boolean)
+        .join(" "),
+    )
     .filter(Boolean);
+}
+
+/** The title's extra parts ("Philly 2025 Replica / Comfort Colors 1717"), minus the blank and "replica". */
+function cleanSubtitle(subtitle: string | null, bp: PrintifyBlueprint | null, blank: BlankSpec | null): string | null {
+  if (!subtitle) return null;
+  const namesBlank = blankMention(bp, blank);
+  const parts = subtitle
+    .split(" / ")
+    .filter((part) => !namesBlank.test(part))
+    .map(dropReplica)
+    .filter(Boolean);
+  return parts.length > 0 ? parts.join(" / ") : null;
 }
 
 /**
@@ -394,7 +439,7 @@ export function toStorefrontProduct(
   blueprint: PrintifyBlueprint | null = null,
   decorationMethods: Record<string, string> = {},
 ): StorefrontProduct {
-  const { title, subtitle } = splitTitle(p.title);
+  const { title, subtitle: rawSubtitle } = splitTitle(p.title);
   const { paragraphs, bullets } = parseDescription(p.description || "");
 
   const colorOptionIndex = p.options.findIndex((o) => o.type === "color");
@@ -433,6 +478,7 @@ export function toStorefrontProduct(
   const blank = getBlankSpec(p.blueprint_id);
   const kind = productKind(p, blank !== null, blueprint);
   const story = splitStory({ paragraphs, bullets }, blueprint, blank);
+  const subtitle = cleanSubtitle(rawSubtitle, blueprint, blank);
   const cardSpec =
     blank?.cardSpec ??
     [kind.one, colors.length > 1 ? `${colors.length} Colorways` : "Made to Order"].join(" / ");
