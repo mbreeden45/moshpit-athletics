@@ -95,7 +95,7 @@ photos. The only display type is the condensed Archivo wordmark. Tokens
   product's kind in `lib/categories.ts`; `/collections/all` redirects to `/`.
 - **Product page**. Desktop: photo with angle thumbnails on the left; name,
   color, description, color thumbnails, price, size dropdown, add to cart /
-  buy now on the right. Phones: title, swipeable photos, size + add to cart,
+  keep shopping on the right. Phones: title, swipeable photos, size + add to cart,
   color and price on one line, swatches, description, fine print. Both end
   with collapsed details, sizing (measurement table), care, and shipping &
   returns. The footer is a black band of links on phones.
@@ -113,8 +113,8 @@ to support@moshpitathletics.com (set in `lib/site.ts`).
 ## Checkout
 
 1. **Bag** (`components/CartProvider.tsx`, `lib/cart.ts`): lives in the
-   browser's localStorage. Add to cart, Buy now and the catalog cards' size
-   pills all add Printify product + variant ids to it.
+   browser's localStorage. Add to cart puts the Printify product + variant
+   ids in it; the bag's "checkout now" starts Stripe Checkout.
 2. **`POST /api/checkout`**: re-prices every line from the live Printify
    catalog (browser prices are display-only), quotes Printify shipping for the
    cart (`orders/shipping.json`; US rates are flat), rounds it up to the next

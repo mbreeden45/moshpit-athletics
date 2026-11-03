@@ -13,8 +13,6 @@ type CartContextValue = {
   /** True once the saved bag has been read from the browser. */
   ready: boolean;
   add: (item: CartItem) => void;
-  /** Add and go straight to Stripe checkout. */
-  buyNow: (item: CartItem) => void;
   setQuantity: (productId: string, variantId: number, quantity: number) => void;
   clear: () => void;
   open: () => void;
@@ -90,11 +88,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setItems((prev) => addLine(prev, item));
         setError(null);
         setIsOpen(true);
-      },
-      buyNow: (item) => {
-        const next = addLine(items, item);
-        setItems(next);
-        void checkout(next);
       },
       setQuantity: (productId, variantId, quantity) =>
         setItems((prev) =>

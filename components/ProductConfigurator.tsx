@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { formatInches } from "@/lib/blanks";
 import type { CartItem } from "@/lib/cart";
@@ -70,7 +71,7 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
   const [sizeId, setSizeId] = useState<number | null>(null);
   const [imageIndex, setImageIndex] = useState(0);
   const [needSize, setNeedSize] = useState(false);
-  const { add, buyNow } = useCart();
+  const { add } = useCart();
 
   // Old per-product links land here with ?blank=<key>.
   useEffect(() => {
@@ -168,11 +169,6 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
   function addToCart() {
     const item = cartItem();
     if (item) add(item);
-  }
-
-  function buyItNow() {
-    const item = cartItem();
-    if (item) buyNow(item);
   }
 
   const spec = product.spec;
@@ -355,9 +351,9 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
             >
               add to cart
             </button>
-            <button type="button" onClick={buyItNow} className="mpa-buy btn bg-fg text-bg hover:opacity-85 max-md:hidden">
-              buy now
-            </button>
+            <Link href="/" className="mpa-buy btn bg-fg text-bg hover:opacity-85 max-md:hidden">
+              keep shopping
+            </Link>
           </div>
           {needSize && (
             <p role="alert" className="text-accent">
