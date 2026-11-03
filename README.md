@@ -75,6 +75,10 @@ Never commit `.env.local`.
   swaps with the Blank/Style pick. Lines after a "Details:" heading go into
   the collapsed details panel, along with the blank's spec summary. The first
   paragraph also leads the meta description and the JSON-LD description.
+  Any sentence that names the blank (a garment brand, the blueprint's brand
+  or its model number, e.g. "Comfort Colors 1717") is dropped from the
+  description; the details panel lists the blank as "printed on: …" instead.
+  Known brands are in `BLANK_BRANDS` in `lib/product.ts`.
   Products without their own text show the blank's spec summary instead.
 - **SEO**: each PDP has `generateMetadata` (canonical URL, OG/Twitter
   cards, price meta) plus `Product` and `BreadcrumbList` JSON-LD. There's

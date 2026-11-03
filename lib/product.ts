@@ -281,15 +281,71 @@ const normText = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
 const STOCK_HINT =
   /\b(introduces the|fully customizable|colou?r charts?|size charts?|discover all \d+ colou?rs|cotton trust protocol)\b/i;
 
-/** The seller's own lines from a description, with the blank's stock copy removed. */
+/** Garment brands we print on or might, for keeping blank names out of descriptions. Case-sensitive. */
+const BLANK_BRANDS = [
+  "Comfort Colors",
+  "Shaka Wear",
+  "Gildan",
+  "Bella+Canvas",
+  "Bella + Canvas",
+  "Bella Canvas",
+  "American Apparel",
+  "Next Level",
+  "Independent Trading",
+  "Cotton Heritage",
+  "Lane Seven",
+  "Los Angeles Apparel",
+  "AS Colour",
+  "Jerzees",
+  "Hanes",
+  "Port & Company",
+  "Yupoong",
+  "Flexfit",
+];
+
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Matches a sentence that names the blank: a known garment brand, the
+ * blueprint's own brand, or its model number (e.g. "1717"). The blank is
+ * listed in the product's details instead.
+ */
+function blankMention(bp: PrintifyBlueprint | null, blank: BlankSpec | null): RegExp {
+  const terms = new Set(BLANK_BRANDS);
+  const brand = bp ? stripMarks(bp.brand) : "";
+  if (brand && !/^generic/i.test(brand)) terms.add(brand);
+  if (blank) terms.add(blank.name);
+  const models = new Set<string>();
+  for (const m of [bp?.model ?? "", ...(blank ? [blank.name] : [])].join(" ").match(/\b[A-Z]*\d{3,}[A-Z]*\b/gi) ?? []) {
+    models.add(m);
+  }
+  const words = [...terms].map((t) => `\\b${escapeRe(t)}\\b`);
+  const codes = [...models].map((m) => `\\b${escapeRe(m)}\\b`);
+  return new RegExp([...words, ...codes].join("|"));
+}
+
+/** Sentences, keeping their end punctuation. */
+function sentences(paragraph: string): string[] {
+  return paragraph.split(/(?<=[.!?])\s+(?=["“'‘(]?[A-Z0-9])/);
+}
+
+/**
+ * The seller's own lines from a description: the blank's stock copy removed,
+ * and any sentence that names the blank dropped (paragraphs left empty go too).
+ */
 function splitStory(
   own: { paragraphs: string[]; bullets: string[] },
   bp: PrintifyBlueprint | null,
+  blank: BlankSpec | null,
 ): string[] {
   const stock = bp ? parseDescription(bp.description) : { paragraphs: [], bullets: [] };
   const stockText = new Set([...stock.paragraphs, ...stock.bullets].map(normText));
   const isStock = (line: string) => stockText.has(normText(line)) || STOCK_HINT.test(line);
-  return own.paragraphs.filter((l) => !isStock(l));
+  const namesBlank = blankMention(bp, blank);
+  return own.paragraphs
+    .filter((l) => !isStock(l))
+    .map((l) => sentences(l).filter((sentence) => !namesBlank.test(sentence)).join(" "))
+    .filter(Boolean);
 }
 
 /**
@@ -376,7 +432,7 @@ export function toStorefrontProduct(
   const isGarment = sizes.some((s) => GARMENT_SIZE.test(s.name.trim()));
   const blank = getBlankSpec(p.blueprint_id);
   const kind = productKind(p, blank !== null, blueprint);
-  const story = splitStory({ paragraphs, bullets }, blueprint);
+  const story = splitStory({ paragraphs, bullets }, blueprint, blank);
   const cardSpec =
     blank?.cardSpec ??
     [kind.one, colors.length > 1 ? `${colors.length} Colorways` : "Made to Order"].join(" / ");
