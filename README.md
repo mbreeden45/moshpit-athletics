@@ -86,13 +86,19 @@ Deliberately bare: a white page, black Courier text at 12px, and the product
 photos. The only display type is the condensed Archivo wordmark. Tokens
 (`bg`, `fg`, `muted`, `faint`, `accent`, `panel`) live in `app/globals.css`.
 
-- **Shop** (`/` for everything, `/collections/<category>` per category):
-  category links on the left (a row on phones) and a grid of photos, no
-  names or prices. Categories come from each product's kind in
-  `lib/categories.ts`; `/collections/all` redirects to `/`.
-- **Product page**: one photo with angle thumbnails; name, color, description,
-  color thumbnails, price, size dropdown, add to cart / buy now, then
-  collapsed details, sizing (measurement table), care, and shipping & returns.
+- **Shop** (`/` for everything, `/collections/<category>` per category).
+  Desktop: category links on the left and a grid of photos, no names or
+  prices. Phones follow Supreme's mobile shop: a grey top bar (back arrow,
+  wordmark, bag), a category dropdown, and two-up bordered cells with the
+  name and price ("sold out" when no variant is available) and a "new" tag
+  for designs created in the last 30 days. Categories come from each
+  product's kind in `lib/categories.ts`; `/collections/all` redirects to `/`.
+- **Product page**. Desktop: photo with angle thumbnails on the left; name,
+  color, description, color thumbnails, price, size dropdown, add to cart /
+  buy now on the right. Phones: title, swipeable photos, size + add to cart,
+  color and price on one line, swatches, description, fine print. Both end
+  with collapsed details, sizing (measurement table), care, and shipping &
+  returns. The footer is a black band of links on phones.
 - **SEO without visible copy**: every page has its own title, meta
   description and canonical; tiles carry the product name as alt text; each
   shop page has a visually hidden `<h1>` and one-line summary that match its

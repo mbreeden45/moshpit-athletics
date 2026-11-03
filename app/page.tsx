@@ -30,7 +30,7 @@ export default async function HomePage() {
         active="all"
         heading={`${SITE_NAME}: graphic tees and apparel`}
         summary={SITE_DESCRIPTION}
-        newKeys={new Set(designs.slice(0, 3).map((d) => d.key))}
+        dialupNewKeys={new Set(designs.slice(0, 3).map((d) => d.key))}
       />
     </>
   );

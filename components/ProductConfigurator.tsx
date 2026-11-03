@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { formatInches } from "@/lib/blanks";
 import type { CartItem } from "@/lib/cart";
 import { CARE_COPY, FIT_COPY, PDP_NOTE, PRINT_METHOD_COPY, PRINT_PROFILE, SHIPPING_RETURNS } from "@/lib/copy";
@@ -92,7 +92,20 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
     const forColor = product.images.filter((img) => img.variantIds.some((id) => ids.has(id)));
     return sortImages(forColor.length ? forColor : product.images).slice(0, MAX_GALLERY);
   }, [colorVariants, product.images]);
-  const mainImage = gallery[imageIndex] ?? gallery[0] ?? null;
+  const scroller = useRef<HTMLDivElement>(null);
+  const galleryKey = gallery.map((img) => img.src).join("|");
+
+  // New colour or blank: back to the first photo.
+  useEffect(() => {
+    scroller.current?.scrollTo({ left: 0 });
+    setImageIndex(0);
+  }, [galleryKey]);
+
+  function showImage(i: number) {
+    const el = scroller.current;
+    el?.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+    setImageIndex(i);
+  }
 
   // One-size items (caps) and size-less items (prints) don't need a size pick.
   const effectiveSize = size ?? (sizes.length === 1 ? sizes[0] : null);
@@ -115,7 +128,6 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
     setBlankIndex(i);
     setColorId(nextColor);
     setSizeId(sizeOk ? nextSize.id : null);
-    setImageIndex(0);
     const url = new URL(window.location.href);
     if (i === 0) url.searchParams.delete("blank");
     else url.searchParams.set("blank", next.blankKey);
@@ -124,7 +136,6 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
 
   function selectColor(id: number) {
     setColorId(id);
-    setImageIndex(0);
     if (sizeId != null && !variants.some((v) => v.colorId === id && v.sizeId === sizeId && v.available)) {
       setSizeId(null);
     }
@@ -178,39 +189,90 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
   const isDtgGarment = product.isGarment && product.printMethods.length === 1 && product.printMethods[0] === "dtg";
   const sizeChoices = sizes.length > 1;
 
+  const colorPicker = colors.length > 1 && (
+    <fieldset className="max-md:order-6">
+      <legend className="sr-only">Color</legend>
+      <div className="flex flex-wrap gap-1.5">
+        {colors.map((c) => {
+          const selected = c.id === colorId;
+          const thumb = colorThumb(product, c.id);
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => selectColor(c.id)}
+              aria-pressed={selected}
+              aria-label={c.name}
+              title={c.name}
+              className={`relative size-[52px] cursor-pointer overflow-hidden border p-1 ${
+                selected ? "border-fg" : "border-transparent hover:border-faint"
+              }`}
+            >
+              {thumb ? (
+                <span className="relative block size-full bg-panel">
+                  <Image src={thumb} alt="" fill sizes="44px" className="object-cover" />
+                </span>
+              ) : (
+                <span className="block size-full border border-faint" style={{ backgroundColor: c.hex }} />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+
+  /*
+   * Phones follow the Supreme order: title, swipeable photos, size + add to
+   * cart, color and price, swatches, description. From md up it's two
+   * columns: photos left, everything else right. Below md the right column
+   * is `display: contents`, so `max-md:order-*` places its children.
+   */
   return (
-    <div className="mx-auto grid w-full max-w-[780px] gap-6 px-4 md:grid-cols-[minmax(0,1fr)_300px] md:gap-12">
-      {/* Photo, then the other angles for this colour */}
-      <div className="flex flex-col gap-3">
-        <div className="relative aspect-square overflow-hidden bg-panel">
-          {mainImage ? (
-            <Image
-              key={mainImage.src}
-              src={mainImage.src}
-              alt={`${design.name}${color ? `, ${color.name}` : ""} — ${positionLabel(mainImage.position)}`}
-              fill
-              priority
-              sizes="(min-width: 780px) 420px, 100vw"
-              className="object-cover"
-            />
-          ) : (
-            <span className="absolute inset-0 flex items-center justify-center text-muted">{design.name}</span>
+    <div className="mx-auto flex w-full max-w-[780px] flex-col gap-6 px-4 max-md:pt-3 md:grid md:grid-cols-[minmax(0,1fr)_300px] md:items-start md:gap-12">
+      {/* Photos: a swipeable strip on phones; thumbnails pick the angle on desktop */}
+      <div className="flex flex-col gap-3 max-md:order-2">
+        <div
+          ref={scroller}
+          onScroll={(e) => {
+            const el = e.currentTarget;
+            const i = Math.round(el.scrollLeft / el.clientWidth);
+            if (i !== imageIndex) setImageIndex(i);
+          }}
+          className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {gallery.length === 0 && (
+            <div className="flex aspect-square w-full items-center justify-center bg-panel text-muted">{design.name}</div>
           )}
+          {gallery.map((img, i) => (
+            <div key={img.src} className="relative aspect-square w-full shrink-0 snap-start bg-panel">
+              <Image
+                src={img.src}
+                alt={`${design.name}${color ? `, ${color.name}` : ""} — ${positionLabel(img.position)}`}
+                fill
+                priority={i === 0}
+                sizes="(min-width: 768px) 420px, 100vw"
+                className="object-cover"
+              />
+            </div>
+          ))}
         </div>
         {gallery.length > 1 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 max-md:justify-center">
             {gallery.map((img, i) => (
               <button
                 key={img.src}
                 type="button"
-                onClick={() => setImageIndex(i)}
-                aria-pressed={img === mainImage}
+                onClick={() => showImage(i)}
+                aria-pressed={i === imageIndex}
                 aria-label={`View ${positionLabel(img.position)}`}
-                className={`relative size-12 cursor-pointer overflow-hidden border bg-panel ${
-                  img === mainImage ? "border-fg" : "border-transparent hover:border-faint"
+                className={`relative cursor-pointer overflow-hidden bg-panel max-md:size-1.5 max-md:rounded-full md:size-12 md:border ${
+                  i === imageIndex
+                    ? "max-md:bg-fg md:border-fg"
+                    : "max-md:bg-faint md:border-transparent md:hover:border-faint"
                 }`}
               >
-                <Image src={img.src} alt="" fill sizes="48px" className="object-cover" />
+                <Image src={img.src} alt="" fill sizes="48px" className="object-cover max-md:hidden" />
               </button>
             ))}
           </div>
@@ -218,21 +280,21 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
       </div>
 
       {/* Details and buy */}
-      <div className="flex flex-col gap-5">
-        <div>
+      <div className="max-md:contents md:flex md:flex-col md:gap-5">
+        <div className="max-md:order-1">
           <h1 className="text-[16px] leading-tight">{design.name}</h1>
           {product.subtitle && <p className="mt-0.5">{product.subtitle}</p>}
-          {color && <p className="mt-0.5 font-bold">{color.name}</p>}
+          {color && <p className="mt-0.5 font-bold max-md:hidden">{color.name}</p>}
         </div>
 
-        <div className="flex flex-col gap-2 leading-[1.35] max-md:order-1" aria-live="polite">
+        <div className="flex flex-col gap-2 leading-[1.35] max-md:order-7" aria-live="polite">
           {description.map((line) => (
             <p key={line}>{line}</p>
           ))}
         </div>
 
         {design.products.length > 1 && (
-          <label className="flex flex-col gap-1">
+          <label className="flex flex-col gap-1 max-md:order-3">
             <span className="sr-only">{design.picker}</span>
             <select
               value={blankIndex}
@@ -248,40 +310,10 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
           </label>
         )}
 
-        {colors.length > 1 && (
-          <fieldset>
-            <legend className="sr-only">Color</legend>
-            <div className="flex flex-wrap gap-1.5">
-              {colors.map((c) => {
-                const selected = c.id === colorId;
-                const thumb = colorThumb(product, c.id);
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => selectColor(c.id)}
-                    aria-pressed={selected}
-                    aria-label={c.name}
-                    title={c.name}
-                    className={`relative size-11 cursor-pointer overflow-hidden border p-0.5 ${
-                      selected ? "border-fg" : "border-transparent hover:border-faint"
-                    }`}
-                  >
-                    {thumb ? (
-                      <span className="relative block size-full bg-panel">
-                        <Image src={thumb} alt="" fill sizes="44px" className="object-cover" />
-                      </span>
-                    ) : (
-                      <span className="block size-full border border-faint" style={{ backgroundColor: c.hex }} />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </fieldset>
-        )}
+        {/* Desktop: swatches sit above the price */}
+        <div className="max-md:hidden">{colorPicker}</div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 max-md:hidden">
           <p className="text-[16px]" aria-live="polite">
             {fromPrefix}
             {formatPrice(price)}
@@ -289,49 +321,68 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
           <EtsyRating />
         </div>
 
-        <div className="flex flex-col gap-2">
-          {sizeChoices && (
-            <label>
-              <span className="sr-only">Size</span>
-              <select
-                value={sizeId ?? ""}
-                onChange={(e) => {
-                  setSizeId(e.target.value ? Number(e.target.value) : null);
-                  setNeedSize(false);
-                }}
-                className="select-flat text-center font-bold"
-              >
-                <option value="">select size</option>
-                {sizes.map((s) => {
-                  const variant = colorVariants.find((v) => v.sizeId === s.id);
-                  const soldOut = !variant || !variant.available;
-                  return (
-                    <option key={s.id} value={s.id} disabled={soldOut}>
-                      {s.name}
-                      {soldOut ? " — sold out" : ""}
-                    </option>
-                  );
-                })}
-              </select>
-            </label>
-          )}
+        <div className="flex flex-col gap-2 max-md:order-4">
+          <div className="grid grid-cols-2 gap-2">
+            {sizeChoices && (
+              <label className="md:col-span-2">
+                <span className="sr-only">Size</span>
+                <select
+                  value={sizeId ?? ""}
+                  onChange={(e) => {
+                    setSizeId(e.target.value ? Number(e.target.value) : null);
+                    setNeedSize(false);
+                  }}
+                  className="select-flat h-full text-center font-bold"
+                >
+                  <option value="">select size</option>
+                  {sizes.map((s) => {
+                    const variant = colorVariants.find((v) => v.sizeId === s.id);
+                    const soldOut = !variant || !variant.available;
+                    return (
+                      <option key={s.id} value={s.id} disabled={soldOut}>
+                        {s.name}
+                        {soldOut ? " — sold out" : ""}
+                      </option>
+                    );
+                  })}
+                </select>
+              </label>
+            )}
+            <button
+              type="button"
+              onClick={addToCart}
+              className={`mpa-buy btn bg-accent text-white hover:brightness-110 max-md:py-2 ${sizeChoices ? "" : "max-md:col-span-2"}`}
+            >
+              add to cart
+            </button>
+            <button type="button" onClick={buyItNow} className="mpa-buy btn bg-fg text-bg hover:opacity-85 max-md:hidden">
+              buy now
+            </button>
+          </div>
           {needSize && (
             <p role="alert" className="text-accent">
               {selectedVariant ? "that one is sold out." : "pick a size first."}
             </p>
           )}
-          <div className="grid grid-cols-2 gap-2">
-            <button type="button" onClick={addToCart} className="mpa-buy btn bg-accent text-white hover:brightness-110">
-              add to cart
-            </button>
-            <button type="button" onClick={buyItNow} className="mpa-buy btn bg-fg text-bg hover:opacity-85">
-              buy now
-            </button>
-          </div>
-          <p className="text-accent">* {PDP_NOTE}</p>
+          <p className="text-accent max-md:hidden">* {PDP_NOTE}</p>
         </div>
 
-        <div className="border-b border-faint max-md:order-2">
+        {/* Phones: color name and price on one line, swatches under it */}
+        <div className="flex items-baseline justify-between text-[13px] md:hidden max-md:order-5">
+          <span className="font-bold">{color?.name ?? ""}</span>
+          <span aria-live="polite">
+            {fromPrefix}
+            {formatPrice(price)}
+          </span>
+        </div>
+        <div className="contents md:hidden">{colorPicker}</div>
+
+        <div className="flex flex-col gap-1 md:hidden max-md:order-8">
+          <p className="text-accent">* {PDP_NOTE}</p>
+          <EtsyRating />
+        </div>
+
+        <div className="border-b border-faint max-md:order-9">
           <Info title="details">
             {specPoints.length > 0 && (
               <ul className="list-['–_'] pl-3">
