@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
   async redirects() {
     return ["/shop", "/shop/:path*", "/product-category/:path*", "/cart", "/checkout", "/my-account", "/my-account/:path*"].map(
       (source) => ({ source, destination: "/", permanent: true }),
+    ).concat(
+      // "all" is the home page.
+      ["/collections", "/collections/all"].map((source) => ({ source, destination: "/", permanent: true })),
     );
   },
   images: {

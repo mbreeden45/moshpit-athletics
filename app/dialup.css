@@ -18,18 +18,13 @@
 /* ---------- Tokens: re-point the design system ---------- */
 html[data-era="dialup"] {
   color-scheme: light;
-  --color-ink: #ffffff;
-  --color-paper: #000000;
+  --color-bg: #ffffff;
+  --color-fg: #000000;
   --color-muted: #555555;
-  --color-body: #000000;
   --color-line: #808080;
-  --color-edge: #000000;
-  --color-rust: #ff0000;
+  --color-faint: #808080;
+  --color-accent: #ff0000;
   --color-panel: #ffffff;
-  --color-panel-2: #eeeeee;
-  --color-panel-light: #ffffff;
-  --color-placeholder: #777777;
-  --font-display: var(--font-silkscreen), "Courier New", monospace;
   --font-mono: "Times New Roman", Times, serif;
   --dialup-gray: #c0c0c0;
 }
@@ -282,56 +277,17 @@ html[data-era="dialup"] a.dialup-exit {
 }
 
 /* ---------- Page content ---------- */
-html[data-era="dialup"] main section,
-html[data-era="dialup"] .mpa-hero {
+html[data-era="dialup"] main section {
   border-color: #808080 !important;
 }
-html[data-era="dialup"] .mpa-hero h1 {
-  font-family: Impact, "Arial Black", sans-serif;
-  font-stretch: normal;
-  font-style: italic;
-  font-size: clamp(44px, 8vw, 96px) !important;
-  color: #ff00ff;
-  text-shadow: 3px 3px 0 #00ffff, 6px 6px 0 #000;
-}
-html[data-era="dialup"] .mpa-hero h1 span {
-  color: #0000ee;
-}
-html[data-era="dialup"] .headline,
-html[data-era="dialup"] .headline-xl {
+html[data-era="dialup"] main h1 {
   font-family: var(--font-silkscreen), "Courier New", monospace;
-  font-stretch: normal;
-  letter-spacing: 0;
-}
-html[data-era="dialup"] h2.headline {
+  font-size: 22px;
   color: #800080;
   text-decoration: underline wavy #ff00ff;
 }
-html[data-era="dialup"] .label {
-  font-family: "Comic Sans MS", "Comic Neue", cursive;
-  text-transform: none;
-}
-html[data-era="dialup"] .prose-body {
-  font-family: "Times New Roman", Times, serif;
-  font-size: 15px;
-}
-
-/* Big call-to-action links: beveled buttons */
-html[data-era="dialup"] .mpa-hero a {
-  border: 3px outset #dfdfdf;
-  background: linear-gradient(180deg, #33ff33, #009900);
-  color: #fff;
-  font-family: Arial, Helvetica, sans-serif;
-  font-weight: bold;
-  text-decoration: none;
-  text-shadow: 1px 1px 0 #000;
-}
-html[data-era="dialup"] .mpa-hero a:active {
-  border-style: inset;
-}
-
 /* Catalog grid: a bordered table */
-html[data-era="dialup"] #collection > div:last-child {
+html[data-era="dialup"] .mpa-grid {
   border: 3px outset #dfdfdf;
   background: #808080;
   gap: 4px;
@@ -341,11 +297,6 @@ html[data-era="dialup"] .mpa-card {
   position: relative;
   border: 3px ridge #c0c0c0;
   background: #ffffcc;
-}
-html[data-era="dialup"] .mpa-card h3 a {
-  font-family: "Comic Sans MS", "Comic Neue", cursive;
-  font-size: 16px;
-  font-weight: bold;
 }
 .dialup-new {
   position: absolute;
@@ -407,11 +358,6 @@ html[data-era="dialup"] .site-footer {
 }
 html[data-era="dialup"] .site-footer a {
   color: #ffff00;
-}
-html[data-era="dialup"] .site-footer p {
-  font-family: Impact, "Arial Black", sans-serif;
-  font-style: italic;
-  font-size: 40px !important;
 }
 
 /* ---------- Winamp ---------- */

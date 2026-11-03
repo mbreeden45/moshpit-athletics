@@ -1,83 +1,57 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { CartItem } from "@/lib/cart";
 import type { StorefrontDesign } from "@/lib/designs";
 import { formatPrice } from "@/lib/product";
-import { QuickAddSizes } from "./QuickAddSizes";
 
-const PILL_SIZES = 5;
+type Props = {
+  design: StorefrontDesign;
+  priority?: boolean;
+  /** Recently added: a small "new" tag on phones. */
+  isNew?: boolean;
+  /** NEW! sticker in the Dial-Up Edition. */
+  dialupNew?: boolean;
+};
 
-/** Quick-add lines for the lead blank in its default color, one per available size. */
-function quickAddItems(design: StorefrontDesign): (CartItem & { size: string })[] {
+/**
+ * A catalog tile. Desktop shows only the photo; phones get a bordered cell
+ * with the name and price (or "sold out") under it.
+ */
+export function ProductCard({ design, priority, isNew, dialupNew }: Props) {
   const product = design.products[0];
-  if (!product.isGarment) return [];
-  const def = product.images.find((i) => i.isDefault);
-  const colorId =
-    product.variants.find((v) => def?.variantIds.includes(v.id))?.colorId ?? product.colors[0]?.id ?? null;
-  const color = product.colors.find((c) => c.id === colorId);
-  return product.sizes
-    .flatMap((s) => {
-      const variant = product.variants.find((v) => v.colorId === colorId && v.sizeId === s.id && v.available);
-      if (!variant) return [];
-      return [
-        {
-          size: s.name,
-          productId: product.id,
-          variantId: variant.id,
-          quantity: 1,
-          slug: design.slug,
-          name: design.name,
-          detail: [design.products.length > 1 ? design.optionLabels[0] : null, color?.name, s.name]
-            .filter(Boolean)
-            .join(" / "),
-          price: variant.price,
-          image: product.defaultImage,
-        },
-      ];
-    })
-    .slice(0, PILL_SIZES);
-}
-
-export function ProductCard({ design, priority, isNew }: { design: StorefrontDesign; priority?: boolean; isNew?: boolean }) {
-  const product = design.products[0];
-  const href = `/products/${design.slug}`;
-  const light = product.colors[0]?.tone === "light";
+  const soldOut = !design.products.some((p) => p.variants.some((v) => v.available));
 
   return (
-    <article className="mpa-card group flex flex-col gap-3.5 bg-ink p-3">
-      <div
-        className={`relative aspect-[4/5] overflow-hidden ${light ? "bg-panel-light" : "bg-panel"}`}
-      >
-        <Link href={href} className="absolute inset-0" aria-label={design.name}>
+    <li className="mpa-card relative max-md:border-b max-md:border-r max-md:border-faint max-md:p-2">
+      <Link href={`/products/${design.slug}`} title={design.name} className="group block">
+        <span className="relative block aspect-square overflow-hidden bg-panel transition-opacity md:group-hover:opacity-80">
           {product.defaultImage ? (
             <Image
               src={product.defaultImage}
-              alt=""
+              alt={`${design.name} — ${product.kind.one}`}
               fill
               priority={priority}
-              sizes="(min-width: 1280px) 20vw, (min-width: 768px) 33vw, (min-width: 540px) 50vw, 100vw"
+              sizes="(min-width: 1024px) 170px, (min-width: 768px) 22vw, (min-width: 640px) 33vw, 50vw"
               className="object-cover"
             />
           ) : (
-            <span className="label absolute bottom-3 left-3 text-placeholder">Photo: {design.name}</span>
+            <span className="absolute inset-0 flex items-center justify-center p-2 text-center text-muted">
+              {design.name}
+            </span>
           )}
-        </Link>
-        <QuickAddSizes items={quickAddItems(design)} />
-        {isNew && <span className="dialup-only dialup-new">NEW!</span>}
-      </div>
-
-      <div className="flex justify-between gap-3 font-display text-[19px] font-bold uppercase leading-[1.1] tracking-normal [font-stretch:80%]">
-        <h3>
-          <Link href={href} className="hover:text-rust">
-            {design.name}
-          </Link>
-        </h3>
-        <span className="shrink-0 font-mono text-[13px] font-normal">
-          {design.priceMin !== design.priceMax && <span className="text-muted">From </span>}
-          {formatPrice(design.priceMin)}
         </span>
-      </div>
-      <p className="label -mt-1.5">{design.cardSpec}</p>
-    </article>
+        <span className="mt-1.5 block text-[11px] leading-[1.08] md:hidden">
+          <span className="block">{design.name}</span>
+          <span className={`mt-0.5 block ${soldOut ? "text-muted" : ""}`}>
+            {soldOut ? "sold out" : formatPrice(design.priceMin)}
+          </span>
+        </span>
+      </Link>
+      {isNew && (
+        <span className="absolute right-0 top-0 border-b border-l border-faint bg-bg px-1 py-0.5 text-[10px] leading-none text-[#ccc] md:hidden">
+          new
+        </span>
+      )}
+      {dialupNew && <span className="dialup-only dialup-new">NEW!</span>}
+    </li>
   );
 }

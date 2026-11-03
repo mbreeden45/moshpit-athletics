@@ -1,18 +1,17 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { getMeasurement } from "@/lib/blanks";
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { formatInches } from "@/lib/blanks";
 import type { CartItem } from "@/lib/cart";
-import { CARE_COPY, CHECKOUT_NOTE, FIT_COPY, PRINT_METHOD_COPY, SHIPPING_RETURNS } from "@/lib/copy";
+import { CARE_COPY, FIT_COPY, PDP_NOTE, PRINT_METHOD_COPY, PRINT_PROFILE, SHIPPING_RETURNS } from "@/lib/copy";
 import type { StorefrontDesign } from "@/lib/designs";
 import { formatPrice, type ProductImage, type StorefrontProduct } from "@/lib/product";
 import { SUPPORT_MAILTO } from "@/lib/site";
 import { BRAND_DISCLAIMER } from "@/lib/specs";
 import { useCart } from "./CartProvider";
 import { EtsyRating } from "./EtsyRating";
-import { GarmentBlueprint } from "./GarmentBlueprint";
-import { PrintProfile } from "./PrintProfile";
 
 const POSITION_ORDER = ["front", "back", "folded", "left_sleeve", "right_sleeve", "other"];
 const MAX_GALLERY = 7;
@@ -39,39 +38,51 @@ function initialColorId(product: StorefrontProduct): number | null {
   return product.colors[0]?.id ?? null;
 }
 
+/** Lead photo for each colour, for the swatch thumbnails. */
+function colorThumb(product: StorefrontProduct, colorId: number): string | null {
+  const ids = new Set(product.variants.filter((v) => v.colorId === colorId).map((v) => v.id));
+  return sortImages(product.images.filter((img) => img.variantIds.some((id) => ids.has(id))))[0]?.src ?? null;
+}
+
 const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
-type Props = {
-  design: StorefrontDesign;
-  /** h1 on the PDP, h2 when featured on the home page. */
-  as?: "h1" | "h2";
-  /** PDP only: fixed mobile buy bar and ?blank= kept in the URL. */
-  stickyBar?: boolean;
-  /** Anchor id for the garment blueprint section. */
-  blueprintId?: string;
-};
+/** Collapsed info block. Closed by default, but its text is in the page for search engines. */
+function Info({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <details className="group border-t border-faint py-2">
+      <summary className="flex cursor-pointer list-none justify-between [&::-webkit-details-marker]:hidden">
+        <span className="group-open:font-bold">{title}</span>
+        <span aria-hidden="true">
+          <span className="group-open:hidden">+</span>
+          <span className="hidden group-open:inline">−</span>
+        </span>
+      </summary>
+      <div className="flex flex-col gap-2 pb-1 pt-2 leading-[1.35]">{children}</div>
+    </details>
+  );
+}
 
-export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = false, blueprintId }: Props) {
+export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
   const [blankIndex, setBlankIndex] = useState(0);
   const product = design.products[blankIndex] ?? design.products[0];
   const { colors, sizes, variants, blank } = product;
 
   const [colorId, setColorId] = useState<number | null>(() => initialColorId(product));
   const [sizeId, setSizeId] = useState<number | null>(null);
-  const [openPanel, setOpenPanel] = useState(0);
+  const [imageIndex, setImageIndex] = useState(0);
   const [needSize, setNeedSize] = useState(false);
-  const { add, buyNow } = useCart();
+  const { add } = useCart();
 
   // Old per-product links land here with ?blank=<key>.
   useEffect(() => {
-    if (!stickyBar || design.products.length < 2) return;
+    if (design.products.length < 2) return;
     const key = new URLSearchParams(window.location.search).get("blank");
     const i = design.products.findIndex((p) => p.blankKey === key);
     if (i > 0) {
       setBlankIndex(i);
       setColorId(initialColorId(design.products[i]));
     }
-  }, [design, stickyBar]);
+  }, [design]);
 
   const color = colors.find((c) => c.id === colorId) ?? null;
   const size = sizes.find((s) => s.id === sizeId) ?? null;
@@ -80,10 +91,22 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
   const gallery = useMemo(() => {
     const ids = new Set(colorVariants.map((v) => v.id));
     const forColor = product.images.filter((img) => img.variantIds.some((id) => ids.has(id)));
-    const sorted = sortImages(forColor.length ? forColor : product.images).slice(0, MAX_GALLERY);
-    // Lead shot + an even count keeps the 2-up grid free of empty cells.
-    return sorted.length > 1 && sorted.length % 2 === 0 ? sorted.slice(0, -1) : sorted;
+    return sortImages(forColor.length ? forColor : product.images).slice(0, MAX_GALLERY);
   }, [colorVariants, product.images]);
+  const scroller = useRef<HTMLDivElement>(null);
+  const galleryKey = gallery.map((img) => img.src).join("|");
+
+  // New colour or blank: back to the first photo.
+  useEffect(() => {
+    scroller.current?.scrollTo({ left: 0 });
+    setImageIndex(0);
+  }, [galleryKey]);
+
+  function showImage(i: number) {
+    const el = scroller.current;
+    el?.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+    setImageIndex(i);
+  }
 
   // One-size items (caps) and size-less items (prints) don't need a size pick.
   const effectiveSize = size ?? (sizes.length === 1 ? sizes[0] : null);
@@ -93,8 +116,7 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
       ? colorVariants[0] ?? null
       : null;
   const price = selectedVariant?.price ?? Math.min(...colorVariants.map((v) => v.price), product.priceMax);
-  const fromPrefix = !selectedVariant && colorVariants.some((v) => v.price !== price) ? "From " : "";
-  const priceLabel = `${fromPrefix}${formatPrice(price, true)}`;
+  const fromPrefix = !selectedVariant && colorVariants.some((v) => v.price !== price) ? "from " : "";
 
   /** Switch blanks, carrying over the colour and size names where the new blank has them. */
   function selectBlank(i: number) {
@@ -107,11 +129,16 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
     setBlankIndex(i);
     setColorId(nextColor);
     setSizeId(sizeOk ? nextSize.id : null);
-    if (stickyBar) {
-      const url = new URL(window.location.href);
-      if (i === 0) url.searchParams.delete("blank");
-      else url.searchParams.set("blank", next.blankKey);
-      window.history.replaceState(window.history.state, "", url);
+    const url = new URL(window.location.href);
+    if (i === 0) url.searchParams.delete("blank");
+    else url.searchParams.set("blank", next.blankKey);
+    window.history.replaceState(window.history.state, "", url);
+  }
+
+  function selectColor(id: number) {
+    setColorId(id);
+    if (sizeId != null && !variants.some((v) => v.colorId === id && v.sizeId === sizeId && v.available)) {
+      setSizeId(null);
     }
   }
 
@@ -119,7 +146,6 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
   function cartItem(): CartItem | null {
     if (!selectedVariant || !selectedVariant.available) {
       setNeedSize(true);
-      document.getElementById(`${product.id}-sizes`)?.scrollIntoView({ behavior: "smooth", block: "center" });
       return null;
     }
     const image =
@@ -145,298 +171,287 @@ export function ProductConfigurator({ design, as: Heading = "h1", stickyBar = fa
     if (item) add(item);
   }
 
-  function buyItNow() {
-    const item = cartItem();
-    if (item) buyNow(item);
-  }
-
-  function selectColor(id: number) {
-    setColorId(id);
-    if (sizeId != null && !variants.some((v) => v.colorId === id && v.sizeId === sizeId && v.available)) {
-      setSizeId(null);
-    }
-  }
-
-  // Style designs swap each style's own story in under the title.
-  const showStory = design.picker === "Style" && product.story.length > 0;
   const spec = product.spec;
-
-  const panels: { title: string; body: ReactNode; list: string[]; note?: string }[] = [
-    {
-      title: product.isGarment ? "Garment specs" : "Details",
-      body: spec?.summary ?? "Printed to order in the USA.",
-      // Prints' spec copy already covers their inks.
-      list: [
-        ...product.printMethods.filter((m) => m !== "digital").map((m) => PRINT_METHOD_COPY[m]),
-        ...(spec?.points ?? []),
-      ],
-      note: spec && product.brandNamed ? BRAND_DISCLAIMER : undefined,
-    },
-    ...(product.isGarment ? [{ title: "Care", body: CARE_COPY, list: [] }] : []),
-    {
-      title: "Shipping and returns",
-      body: (
-        <>
-          {SHIPPING_RETURNS.lead}
-          <a href={SUPPORT_MAILTO} className="text-paper underline underline-offset-2 hover:text-rust">
-            {SHIPPING_RETURNS.linkText}
-          </a>
-          {SHIPPING_RETURNS.tail}
-        </>
-      ),
-      list: [],
-    },
+  // Style designs carry each style's own words; everything else gets the blank's spec summary.
+  const description = [
+    ...(design.picker === "Style" ? product.story : []),
+    spec?.summary ?? "Printed to order in the USA.",
   ];
+  const specPoints = [
+    // Prints' spec copy already covers their inks.
+    ...product.printMethods.filter((m) => m !== "digital").map((m) => PRINT_METHOD_COPY[m]),
+    ...(spec?.points ?? []),
+  ];
+  const isDtgGarment = product.isGarment && product.printMethods.length === 1 && product.printMethods[0] === "dtg";
+  const sizeChoices = sizes.length > 1;
 
-  const panelBg = color?.tone === "light" ? "bg-panel-light" : "bg-panel";
+  const colorPicker = colors.length > 1 && (
+    <fieldset className="max-md:order-6">
+      <legend className="sr-only">Color</legend>
+      <div className="flex flex-wrap gap-1.5">
+        {colors.map((c) => {
+          const selected = c.id === colorId;
+          const thumb = colorThumb(product, c.id);
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => selectColor(c.id)}
+              aria-pressed={selected}
+              aria-label={c.name}
+              title={c.name}
+              className={`relative size-[52px] cursor-pointer overflow-hidden border p-1 ${
+                selected ? "border-fg" : "border-transparent hover:border-faint"
+              }`}
+            >
+              {thumb ? (
+                <span className="relative block size-full bg-panel">
+                  <Image src={thumb} alt="" fill sizes="44px" className="object-cover" />
+                </span>
+              ) : (
+                <span className="block size-full border border-faint" style={{ backgroundColor: c.hex }} />
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
 
+  /*
+   * Phones follow the Supreme order: title, swipeable photos, size + add to
+   * cart, color and price, swatches, description. From md up it's two
+   * columns: photos left, everything else right. Below md the right column
+   * is `display: contents`, so `max-md:order-*` places its children.
+   */
   return (
-    <>
-      <section className="flex flex-wrap items-start border-t border-line">
-        {/* Gallery: lead shot full-width, then a 2-up grid */}
-        <div className="grid flex-[1_1_560px] grid-cols-2 gap-px bg-line">
+    <div className="mx-auto flex w-full max-w-[780px] flex-col gap-6 px-4 max-md:pt-3 md:grid md:grid-cols-[minmax(0,1fr)_300px] md:items-start md:gap-12">
+      {/* Photos: a swipeable strip on phones; thumbnails pick the angle on desktop */}
+      <div className="flex flex-col gap-3 max-md:order-2">
+        <div
+          ref={scroller}
+          onScroll={(e) => {
+            const el = e.currentTarget;
+            const i = Math.round(el.scrollLeft / el.clientWidth);
+            if (i !== imageIndex) setImageIndex(i);
+          }}
+          className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
           {gallery.length === 0 && (
-            <div className={`col-span-2 flex aspect-[1/1.1] items-end p-5 label ${panelBg} text-placeholder`}>
-              Photo: {design.name}
-            </div>
+            <div className="flex aspect-square w-full items-center justify-center bg-panel text-muted">{design.name}</div>
           )}
           {gallery.map((img, i) => (
-            <div
-              key={img.src}
-              className={`relative overflow-hidden ${panelBg} ${i === 0 ? "col-span-2 aspect-[1/1.1]" : "aspect-square"}`}
-            >
+            <div key={img.src} className="relative aspect-square w-full shrink-0 snap-start bg-panel">
               <Image
                 src={img.src}
                 alt={`${design.name}${color ? `, ${color.name}` : ""} — ${positionLabel(img.position)}`}
                 fill
                 priority={i === 0}
-                sizes={i === 0 ? "(min-width: 1000px) 57vw, 100vw" : "(min-width: 1000px) 28vw, 50vw"}
+                sizes="(min-width: 768px) 420px, 100vw"
                 className="object-cover"
               />
             </div>
           ))}
         </div>
-
-        {/* Buy panel */}
-        <div className="flex flex-[1_1_420px] flex-col gap-6 border-line px-4 py-10 sm:px-8 lg:sticky lg:top-[60px] lg:border-l">
-          <p className="uppercase text-rust">
-            {product.kind.many}
-          </p>
-          <div>
-            <Heading className="headline-xl text-[clamp(56px,6vw,96px)] leading-[0.88]">{design.name}</Heading>
-            {product.subtitle && <p className="label mt-4 normal-case">{product.subtitle}</p>}
+        {gallery.length > 1 && (
+          <div className="flex flex-wrap gap-2 max-md:justify-center">
+            {gallery.map((img, i) => (
+              <button
+                key={img.src}
+                type="button"
+                onClick={() => showImage(i)}
+                aria-pressed={i === imageIndex}
+                aria-label={`View ${positionLabel(img.position)}`}
+                className={`relative cursor-pointer overflow-hidden bg-panel max-md:size-1.5 max-md:rounded-full md:size-12 md:border ${
+                  i === imageIndex
+                    ? "max-md:bg-fg md:border-fg"
+                    : "max-md:bg-faint md:border-transparent md:hover:border-faint"
+                }`}
+              >
+                <Image src={img.src} alt="" fill sizes="48px" className="object-cover max-md:hidden" />
+              </button>
+            ))}
           </div>
-          {showStory && (
-            <div className="prose-body flex max-w-[520px] flex-col gap-2 text-body" aria-live="polite">
-              {product.story.map((line) => (
-                <p key={line}>{line}</p>
+        )}
+      </div>
+
+      {/* Details and buy */}
+      <div className="max-md:contents md:flex md:flex-col md:gap-5">
+        <div className="max-md:order-1">
+          <h1 className="text-[16px] leading-tight">{design.name}</h1>
+          {product.subtitle && <p className="mt-0.5">{product.subtitle}</p>}
+          {color && <p className="mt-0.5 font-bold max-md:hidden">{color.name}</p>}
+        </div>
+
+        <div className="flex flex-col gap-2 leading-[1.35] max-md:order-7" aria-live="polite">
+          {description.map((line) => (
+            <p key={line}>{line}</p>
+          ))}
+        </div>
+
+        {design.products.length > 1 && (
+          <label className="flex flex-col gap-1 max-md:order-3">
+            <span className="sr-only">{design.picker}</span>
+            <select
+              value={blankIndex}
+              onChange={(e) => selectBlank(Number(e.target.value))}
+              className="select-flat"
+            >
+              {design.products.map((p, i) => (
+                <option key={p.id} value={i}>
+                  {`${design.optionLabels[i]} — ${p.priceMin !== p.priceMax ? "from " : ""}${formatPrice(p.priceMin)}`}
+                </option>
               ))}
-            </div>
-          )}
-          <div className="flex flex-col gap-2">
-            <p className="text-[24px]" aria-live="polite">
-              {priceLabel}
-            </p>
-            <EtsyRating />
-          </div>
+            </select>
+          </label>
+        )}
 
-          {design.products.length > 1 && design.picker === "Style" && (
-            <div>
-              <label htmlFor={`${design.key}-style`} className="mb-2.5 block uppercase">
-                Style
-              </label>
-              <div className="relative">
+        {/* Desktop: swatches sit above the price */}
+        <div className="max-md:hidden">{colorPicker}</div>
+
+        <div className="flex flex-col gap-1 max-md:hidden">
+          <p className="text-[16px]" aria-live="polite">
+            {fromPrefix}
+            {formatPrice(price)}
+          </p>
+          <EtsyRating />
+        </div>
+
+        <div className="flex flex-col gap-2 max-md:order-4">
+          <div className="grid grid-cols-2 gap-2">
+            {sizeChoices && (
+              <label className="md:col-span-2">
+                <span className="sr-only">Size</span>
                 <select
-                  id={`${design.key}-style`}
-                  value={blankIndex}
-                  onChange={(e) => selectBlank(Number(e.target.value))}
-                  className="w-full cursor-pointer appearance-none border border-paper bg-ink px-4 py-3.5 pr-10 text-[13px] text-paper hover:border-muted"
+                  value={sizeId ?? ""}
+                  onChange={(e) => {
+                    setSizeId(e.target.value ? Number(e.target.value) : null);
+                    setNeedSize(false);
+                  }}
+                  className="select-flat h-full text-center font-bold"
                 >
-                  {design.products.map((p, i) => (
-                    <option key={p.id} value={i}>
-                      {`${design.optionLabels[i]} — ${p.priceMin !== p.priceMax ? "From " : ""}${formatPrice(p.priceMin)}`}
-                    </option>
-                  ))}
+                  <option value="">select size</option>
+                  {sizes.map((s) => {
+                    const variant = colorVariants.find((v) => v.sizeId === s.id);
+                    const soldOut = !variant || !variant.available;
+                    return (
+                      <option key={s.id} value={s.id} disabled={soldOut}>
+                        {s.name}
+                        {soldOut ? " — sold out" : ""}
+                      </option>
+                    );
+                  })}
                 </select>
-                <span aria-hidden="true" className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
-                  ▾
-                </span>
-              </div>
-            </div>
-          )}
-
-          {design.products.length > 1 && design.picker === "Blank" && (
-            <fieldset>
-              <legend className="mb-2.5 uppercase">Blank: {product.blankLabel}</legend>
-              <div className="flex flex-col gap-2">
-                {design.products.map((p, i) => {
-                  const selected = i === blankIndex;
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => selectBlank(i)}
-                      aria-pressed={selected}
-                      className={`flex cursor-pointer justify-between gap-4 border px-4 py-3.5 text-left text-[13px] ${
-                        selected ? "border-paper bg-paper text-ink" : "border-edge hover:border-muted"
-                      }`}
-                    >
-                      <span>{design.optionLabels[i]}</span>
-                      <span className="shrink-0">
-                        {p.priceMin !== p.priceMax && "From "}
-                        {formatPrice(p.priceMin)}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </fieldset>
-          )}
-
-          {colors.length > 1 && (
-            <fieldset>
-              <legend className="mb-2.5 uppercase">Color: {color?.name}</legend>
-              <div className="flex flex-wrap gap-2">
-                {colors.map((c) => {
-                  const selected = c.id === colorId;
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => selectColor(c.id)}
-                      aria-pressed={selected}
-                      aria-label={c.name}
-                      title={c.name}
-                      className={`size-8 cursor-pointer border p-[3px] ${selected ? "border-paper" : "border-edge hover:border-muted"}`}
-                    >
-                      <span className="block size-full" style={{ backgroundColor: c.hex }} />
-                    </button>
-                  );
-                })}
-              </div>
-            </fieldset>
-          )}
-
-          {sizes.length > 0 && (
-            <fieldset id={`${product.id}-sizes`} className="scroll-mt-24">
-              <legend className="mb-2.5 uppercase">Size: {size?.name ?? "Select"}</legend>
-              <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-2">
-                {sizes.map((s) => {
-                  const variant = colorVariants.find((v) => v.sizeId === s.id);
-                  const disabled = !variant || !variant.available;
-                  const selected = s.id === sizeId;
-                  const m = getMeasurement(blank, s.name);
-                  return (
-                    <button
-                      key={s.id}
-                      type="button"
-                      disabled={disabled}
-                      onClick={() => {
-                        setSizeId(selected ? null : s.id);
-                        setNeedSize(false);
-                      }}
-                      aria-pressed={selected}
-                      className={`cursor-pointer whitespace-nowrap border px-2 py-3.5 text-[13px] disabled:cursor-not-allowed disabled:opacity-30 disabled:line-through ${
-                        selected ? "border-paper bg-paper text-ink" : "border-edge hover:border-muted"
-                      }`}
-                    >
-                      {s.name}
-                      {m && ` (${m.chest}" x ${m.length}")`}
-                    </button>
-                  );
-                })}
-              </div>
-              {product.isGarment && <p className="prose-body mt-3 text-muted">{FIT_COPY}</p>}
-            </fieldset>
-          )}
-
-          <div className="flex flex-col gap-6">
-            {needSize && (
-              <p role="alert" className="-mb-3 uppercase text-rust">
-                {selectedVariant ? "That combination is sold out." : "Pick a size first."}
-              </p>
+              </label>
             )}
             <button
               type="button"
               onClick={addToCart}
-              className="mpa-buy cursor-pointer border border-paper bg-paper p-5 text-center text-[14px] font-medium uppercase tracking-[0.06em] text-ink hover:border-rust hover:bg-rust hover:text-paper"
+              className={`mpa-buy btn bg-accent text-white hover:brightness-110 max-md:py-2 ${sizeChoices ? "" : "max-md:col-span-2"}`}
             >
-              Add to cart / {formatPrice(price, true)}
+              add to cart
             </button>
-            <button
-              type="button"
-              onClick={buyItNow}
-              className="mpa-buy cursor-pointer border border-paper bg-black p-[18px] text-center text-[14px] font-medium hover:bg-panel"
-            >
-              Buy now
-            </button>
-            <p className="label -mt-3 normal-case tracking-normal">
-              {CHECKOUT_NOTE}
-              {(color || effectiveSize) && (
-                <span className="text-paper"> {[color?.name, effectiveSize?.name].filter(Boolean).join(" / ")}</span>
-              )}
-            </p>
+            <Link href="/" className="mpa-buy btn bg-fg text-bg hover:opacity-85 max-md:hidden">
+              keep shopping
+            </Link>
           </div>
+          {needSize && (
+            <p role="alert" className="text-accent">
+              {selectedVariant ? "that one is sold out." : "pick a size first."}
+            </p>
+          )}
+          <p className="text-accent max-md:hidden">* {PDP_NOTE}</p>
+        </div>
 
-          {/* The light/dark print box only describes DTG. */}
-          {product.isGarment && product.printMethods.length === 1 && product.printMethods[0] === "dtg" && (
-            <PrintProfile activeTone={color?.tone} />
+        {/* Phones: color name and price on one line, swatches under it */}
+        <div className="flex items-baseline justify-between text-[13px] md:hidden max-md:order-5">
+          <span className="font-bold">{color?.name ?? ""}</span>
+          <span aria-live="polite">
+            {fromPrefix}
+            {formatPrice(price)}
+          </span>
+        </div>
+        <div className="contents md:hidden">{colorPicker}</div>
+
+        <div className="flex flex-col gap-1 md:hidden max-md:order-8">
+          <p className="text-accent">* {PDP_NOTE}</p>
+          <EtsyRating />
+        </div>
+
+        <div className="border-b border-faint max-md:order-9">
+          <Info title="details">
+            {specPoints.length > 0 && (
+              <ul className="list-['–_'] pl-3">
+                {specPoints.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            )}
+            {isDtgGarment && (
+              <>
+                <p>
+                  <span className="font-bold">{PRINT_PROFILE.dark.label}:</span> {PRINT_PROFILE.dark.body}
+                </p>
+                <p>
+                  <span className="font-bold">{PRINT_PROFILE.light.label}:</span> {PRINT_PROFILE.light.body}
+                </p>
+                <p>{PRINT_PROFILE.notice}</p>
+              </>
+            )}
+            {spec && product.brandNamed && <p className="text-muted">{BRAND_DISCLAIMER}</p>}
+          </Info>
+
+          {product.isGarment && (
+            <Info title="sizing">
+              <p>{FIT_COPY}</p>
+              {blank && (
+                <>
+                  <table className="w-full text-left">
+                    <caption className="pb-1 text-left text-muted">
+                      {blank.name}, flat measurements in inches
+                    </caption>
+                    <thead>
+                      <tr className="border-b border-faint">
+                        <th scope="col" className="py-1 font-bold">size</th>
+                        <th scope="col" className="py-1 font-bold">chest</th>
+                        <th scope="col" className="py-1 font-bold">length</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(blank.measurements).map(([name, m]) => (
+                        <tr key={name}>
+                          <th scope="row" className="py-0.5 font-normal">{name}</th>
+                          <td className="py-0.5">{formatInches(m.chest)}</td>
+                          <td className="py-0.5">{formatInches(m.length)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p className="text-muted">
+                    {blank.weight} · {blank.fabric.toLowerCase()} · {blank.cut.toLowerCase()}
+                  </p>
+                </>
+              )}
+            </Info>
           )}
 
-          <div className="border-t border-line">
-            {panels.map((panel, i) => {
-              const open = openPanel === i;
-              const id = `${product.id}-panel-${i}`;
-              return (
-                <div key={panel.title} className="border-b border-line">
-                  <button
-                    type="button"
-                    onClick={() => setOpenPanel(open ? -1 : i)}
-                    aria-expanded={open}
-                    aria-controls={id}
-                    className="flex w-full cursor-pointer justify-between py-4 text-left uppercase"
-                  >
-                    <span>{panel.title}</span>
-                    <span aria-hidden="true">{open ? "-" : "+"}</span>
-                  </button>
-                  <div id={id} hidden={!open} className="prose-body pb-[18px]">
-                    <p>{panel.body}</p>
-                    {panel.list.length > 0 && (
-                      <ul className="mt-3 list-['–_'] pl-4">
-                        {panel.list.map((item) => (
-                          <li key={item}>{item}</li>
-                        ))}
-                      </ul>
-                    )}
-                    {panel.note && <p className="label mt-3 normal-case tracking-normal">{panel.note}</p>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
+          {product.isGarment && (
+            <Info title="care">
+              <p>{CARE_COPY}</p>
+            </Info>
+          )}
 
-      {blank && <GarmentBlueprint blank={blank} id={blueprintId} />}
-
-      {stickyBar && (
-        <div className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-[1fr_1.4fr] border-t border-paper bg-ink md:hidden">
-          <button
-            type="button"
-            onClick={addToCart}
-            className="cursor-pointer border-r border-paper py-5 text-center uppercase tracking-[0.06em]"
-          >
-            Add to cart
-          </button>
-          <button
-            type="button"
-            onClick={buyItNow}
-            className="cursor-pointer bg-paper py-5 text-center font-medium uppercase tracking-[0.06em] text-ink"
-          >
-            Buy now / {formatPrice(price)}
-          </button>
+          <Info title="shipping & returns">
+            <p>
+              {SHIPPING_RETURNS.lead}
+              <a href={SUPPORT_MAILTO} className="underline underline-offset-2">
+                {SHIPPING_RETURNS.linkText}
+              </a>
+              {SHIPPING_RETURNS.tail}
+            </p>
+          </Info>
         </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 }

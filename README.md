@@ -82,16 +82,30 @@ for a non-lead blank. Old per-product URLs ending in a Printify id redirect
 
 ## Design
 
-The layout follows the Claude Design export "Mosh Pit Athletics v2":
-Archivo (variable width, 62–80% stretch) for headlines and IBM Plex Mono at
-13px for everything else. Colors are `#0A0A0A`, `#F5F5F3`, `#8A8A86` and
-`#B5473F`, with 1px `#262626` rules. Design tokens live in `app/globals.css`.
+Deliberately bare: a white page, black Courier text at 12px, and the product
+photos. The only display type is the condensed Archivo wordmark. Tokens
+(`bg`, `fg`, `muted`, `faint`, `accent`, `panel`) live in `app/globals.css`.
 
-- **Home**: hero, Collection grid (hover shows quick-buy size pills), then the
-  newest tee as a featured product with its Garment Blueprint.
-- **Product page**: gallery plus a sticky buy panel (color, size with inline
-  chest × length, Print box, accordion), the Garment Blueprint table, and
-  a fixed buy bar on mobile.
+- **Shop** (`/` for everything, `/collections/<category>` per category).
+  Desktop: category links on the left and a grid of photos, no names or
+  prices. Phones follow Supreme's mobile shop: a grey top bar (back arrow,
+  wordmark, bag), a category dropdown, and two-up bordered cells with the
+  name and price ("sold out" when no variant is available) and a "new" tag
+  for designs created in the last 30 days. Categories come from each
+  product's kind in `lib/categories.ts`; `/collections/all` redirects to `/`.
+- **Product page**. Desktop: photo with angle thumbnails on the left; name,
+  color, description, color thumbnails, price, size dropdown, add to cart /
+  keep shopping on the right. Phones: title, swipeable photos, size + add to cart,
+  color and price on one line, swatches, description, fine print. Both end
+  with collapsed details, sizing (measurement table), care, and shipping &
+  returns. The footer is a black band of links on phones.
+- **SEO without visible copy**: every page has its own title, meta
+  description and canonical; tiles carry the product name as alt text; each
+  shop page has a visually hidden `<h1>` and one-line summary that match its
+  meta description; JSON-LD covers the Organization, the ItemList /
+  CollectionPage, breadcrumbs (Shop › Category › Product) and the
+  ProductGroup with per-variant offers. Collapsed product-page sections are in
+  the HTML, so they're indexed. Category pages are in the sitemap.
 
 Terms and Privacy still link to the Pop-Up's pages, and Contact is a mailto
 to support@moshpitathletics.com (set in `lib/site.ts`).
@@ -99,8 +113,8 @@ to support@moshpitathletics.com (set in `lib/site.ts`).
 ## Checkout
 
 1. **Bag** (`components/CartProvider.tsx`, `lib/cart.ts`): lives in the
-   browser's localStorage. Add to cart, Buy now and the catalog cards' size
-   pills all add Printify product + variant ids to it.
+   browser's localStorage. Add to cart puts the Printify product + variant
+   ids in it; the bag's "checkout now" starts Stripe Checkout.
 2. **`POST /api/checkout`**: re-prices every line from the live Printify
    catalog (browser prices are display-only), quotes Printify shipping for the
    cart (`orders/shipping.json`; US rates are flat), rounds it up to the next
@@ -129,7 +143,7 @@ Sales tax is not collected yet. To add it, enable Stripe Tax and pass
 ## Dial-Up Edition
 
 An opt-in 1999 Angelfire skin over the whole site, reached from the small
-"Best viewed in Netscape Navigator 4.0 · Dial-Up Edition" footer link
+"1999" footer link
 (`/?dialup`, remembered per browser; `/?2026` or "Back to 2026" exits).
 
 - `ERA_SCRIPT` (in `<head>`) sets `<html data-era="dialup">` before paint.

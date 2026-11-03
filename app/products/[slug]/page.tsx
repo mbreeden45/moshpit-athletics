@@ -3,6 +3,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { JsonLd } from "@/components/JsonLd";
 import { ProductConfigurator } from "@/components/ProductConfigurator";
 import { getDesignBySlug, getDesigns } from "@/lib/catalog";
+import { primaryCategory } from "@/lib/categories";
 import { PRINT_METHOD_COPY } from "@/lib/copy";
 import type { StorefrontDesign } from "@/lib/designs";
 import { quoteForProduct } from "@/lib/shipping";
@@ -162,12 +163,14 @@ async function productJsonLd(d: StorefrontDesign) {
 }
 
 function breadcrumbJsonLd(d: StorefrontDesign) {
+  const category = primaryCategory(d);
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Shop", item: `${SITE_URL}/` },
-      { "@type": "ListItem", position: 2, name: d.name, item: `${SITE_URL}/products/${d.slug}` },
+      { "@type": "ListItem", position: 2, name: category.title, item: `${SITE_URL}/collections/${category.slug}` },
+      { "@type": "ListItem", position: 3, name: d.name, item: `${SITE_URL}/products/${d.slug}` },
     ],
   };
 }
@@ -182,10 +185,10 @@ export default async function ProductPage({ params }: Props) {
   const { design } = found;
 
   return (
-    <div className="pb-16 md:pb-0">
+    <>
       <JsonLd data={await productJsonLd(design)} />
       <JsonLd data={breadcrumbJsonLd(design)} />
-      <ProductConfigurator design={design} stickyBar />
-    </div>
+      <ProductConfigurator design={design} />
+    </>
   );
 }
