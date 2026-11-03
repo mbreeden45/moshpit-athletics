@@ -37,7 +37,7 @@ export type StorefrontProduct = {
   title: string;
   subtitle: string | null;
   fullTitle: string;
-  /** The seller's own words: description paragraphs that aren't the blank's stock copy. */
+  /** The seller's own words about the design: description paragraphs that aren't the blank's stock copy. */
   story: string[];
   /** Decoration methods actually used by this product's artwork. */
   printMethods: PrintMethod[];
@@ -274,6 +274,13 @@ function artworkKey(p: PrintifyProduct): string {
 
 const normText = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
 
+/**
+ * Telltales of Printify's stock blank copy, for descriptions pasted in before
+ * Printify reworded its own (so the exact-match check below misses them).
+ */
+const STOCK_HINT =
+  /\b(introduces the|fully customizable|colou?r charts?|size charts?|discover all \d+ colou?rs|cotton trust protocol)\b/i;
+
 /** The seller's own lines from a description, with the blank's stock copy removed. */
 function splitStory(
   own: { paragraphs: string[]; bullets: string[] },
@@ -281,8 +288,17 @@ function splitStory(
 ): string[] {
   const stock = bp ? parseDescription(bp.description) : { paragraphs: [], bullets: [] };
   const stockText = new Set([...stock.paragraphs, ...stock.bullets].map(normText));
-  const isStock = (line: string) => stockText.has(normText(line));
+  const isStock = (line: string) => stockText.has(normText(line)) || STOCK_HINT.test(line);
   return own.paragraphs.filter((l) => !isStock(l));
+}
+
+/**
+ * A story split at a "Details:" style heading: the prose above it is the
+ * product description; the lines below it are notes for the details panel.
+ */
+export function storySections(story: string[]): { about: string[]; notes: string[] } {
+  const i = story.findIndex((l) => /^(details|features|specs|product details)\s*:?$/i.test(l.trim()));
+  return i === -1 ? { about: story, notes: [] } : { about: story.slice(0, i), notes: story.slice(i + 1) };
 }
 
 const stripMarks = (s: string) => s.replace(/[®™]/g, "").replace(/\s+/g, " ").trim();
