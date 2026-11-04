@@ -28,11 +28,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { design } = found;
   const product = design.products[0];
   const url = `/products/${design.slug}`;
-  const title = design.name;
+  // "The Flagg Bars Tee: Cooper Flagg x Black Flag Shirt": the words people search.
+  const title = design.fullName;
   const description = metaDescription(design);
   const images = product.images
     .slice(0, 4)
-    .map((img) => ({ url: img.src, alt: `${design.name} — ${img.position.replace("_", " ")}` }));
+    .map((img) => ({ url: img.src, alt: `${design.fullName} — ${img.position.replace("_", " ")}` }));
 
   return {
     title,
@@ -65,6 +66,7 @@ function metaDescription(d: StorefrontDesign): string {
   // The seller's own first paragraph says what the design is; it leads when there is one.
   const lead = storySections(p.story).about[0];
   const parts = [
+    d.searchLine,
     lead,
     p.subtitle && (/[.!?]$/.test(p.subtitle) ? p.subtitle : `${p.subtitle}.`),
     p.blank ? `${p.blank.name}, ${p.blank.weight} ${p.blank.fabric.toLowerCase()}.` : null,
@@ -125,7 +127,7 @@ async function productJsonLd(d: StorefrontDesign) {
       return {
         "@type": "Product",
         sku: `${p.id}-${v.id}`,
-        name: [d.name, d.products.length > 1 ? d.optionLabels[i] : null, [color, size].filter(Boolean).join(" / ")]
+        name: [d.fullName, d.products.length > 1 ? d.optionLabels[i] : null, [color, size].filter(Boolean).join(" / ")]
           .filter(Boolean)
           .join(" – "),
         ...(image ? { image } : {}),
@@ -150,8 +152,10 @@ async function productJsonLd(d: StorefrontDesign) {
     "@context": "https://schema.org",
     "@type": "ProductGroup",
     "@id": `${url}#product`,
-    name: d.name,
-    description: [...storySections(lead.story).about, lead.subtitle, lead.spec?.summary].filter(Boolean).join(" ") || d.name,
+    name: d.fullName,
+    description:
+      [d.searchLine, ...storySections(lead.story).about, lead.subtitle, lead.spec?.summary].filter(Boolean).join(" ") ||
+      d.name,
     url,
     productGroupID: d.slug,
     image: lead.images.slice(0, 8).map((i) => i.src),

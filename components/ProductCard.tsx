@@ -28,7 +28,7 @@ export function ProductCard({ design, priority, isNew, dialupNew }: Props) {
     <li className="mpa-card relative max-md:border-b max-md:border-r max-md:border-faint max-md:p-2">
       <Link
         href={`/products/${design.slug}`}
-        title={design.name}
+        title={design.fullName}
         aria-label={`${design.name}, ${soldOut ? "sold out" : price}`}
         className="group block md:border md:border-transparent md:p-1.5 md:hover:border-[#c8c8c8] md:focus-visible:border-[#c8c8c8] md:focus-visible:outline-none"
       >
@@ -36,7 +36,7 @@ export function ProductCard({ design, priority, isNew, dialupNew }: Props) {
           {product.defaultImage ? (
             <Image
               src={product.defaultImage}
-              alt={`${design.name} — ${product.kind.one}`}
+              alt={design.fullName}
               fill
               priority={priority}
               sizes="(min-width: 1024px) 170px, (min-width: 768px) 22vw, (min-width: 640px) 33vw, 50vw"

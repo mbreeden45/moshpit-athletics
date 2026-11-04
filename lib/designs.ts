@@ -1,4 +1,5 @@
 import { slugify, splitTitle, type StorefrontProduct } from "./product";
+import { SEARCH_COPY } from "./search-copy";
 
 /**
  * A design is one artwork sold on one or more blanks. Printify keeps each
@@ -24,6 +25,12 @@ export type StorefrontDesign = {
   priceMax: number;
   cardSpec: string;
   updatedAt: string;
+  /** Searchable description of what the design references (lib/search-copy.ts). */
+  keywords: string | null;
+  /** One sentence leading the description. */
+  searchLine: string | null;
+  /** "<name>: <keywords>", or just the name. For titles, alt text and feeds. */
+  fullName: string;
 };
 
 /** Lead blank order; anything unlisted follows, newest first. */
@@ -54,6 +61,7 @@ const DESIGN_NAMES: Record<string, string> = {
   "68ed6fc6ed926f86860dfb2d": "The Flagg Bars Tee",
   "68ed6fc4ed926f86860dfb29": "The Black Heaven Tee",
   "68ed6fc2ed926f86860dfb28": "The Scythe Tee",
+  "6ae91c01c23e022f480b5502": "The Skeleton Hoops Tee",
 };
 
 /**
@@ -138,10 +146,14 @@ export function groupDesigns(products: StorefrontProduct[]): StorefrontDesign[] 
     usedSlugs.add(slug);
 
     const lead = blanks[0];
+    const search = blanks.map((p) => SEARCH_COPY[p.id]).find(Boolean) ?? null;
     designs.push({
       key,
       slug,
       name,
+      keywords: search?.keywords ?? null,
+      searchLine: search?.line ?? null,
+      fullName: search ? `${name}: ${search.keywords}` : name,
       products: blanks,
       picker,
       optionLabels,
