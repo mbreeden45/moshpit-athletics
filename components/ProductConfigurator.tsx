@@ -174,7 +174,11 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
   const spec = product.spec;
   // The seller's words about the design lead; without them, the blank's spec summary stands in.
   const { about, notes } = storySections(product.story);
-  const description = about.length > 0 ? about : [spec?.summary ?? "Printed to order in the USA."];
+  const description = [
+    // What the design references, in searchable words (lib/search-copy.ts), always first.
+    ...(design.searchLine ? [design.searchLine] : []),
+    ...(about.length > 0 ? about : [spec?.summary ?? "Printed to order in the USA."]),
+  ];
   // When the story fills the description, the blank's summary moves into details.
   const blankSummary = about.length > 0 ? spec?.summary : undefined;
   const specPoints = [
@@ -244,7 +248,7 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
             <div key={img.src} className="relative aspect-square w-full shrink-0 snap-start bg-panel">
               <Image
                 src={img.src}
-                alt={`${design.name}${color ? `, ${color.name}` : ""} — ${positionLabel(img.position)}`}
+                alt={`${design.fullName}${color ? `, ${color.name}` : ""} — ${positionLabel(img.position)}`}
                 fill
                 priority={i === 0}
                 sizes="(min-width: 768px) 420px, 100vw"
@@ -279,7 +283,7 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
       <div className="max-md:contents md:flex md:flex-col md:gap-5">
         <div className="max-md:order-1">
           <h1 className="text-[16px] leading-tight">{design.name}</h1>
-          {product.subtitle && <p className="mt-0.5">{product.subtitle}</p>}
+          {(design.keywords ?? product.subtitle) && <p className="mt-0.5">{design.keywords ?? product.subtitle}</p>}
           {color && <p className="mt-0.5 font-bold max-md:hidden">{color.name}</p>}
         </div>
 
