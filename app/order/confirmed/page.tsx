@@ -20,39 +20,33 @@ export default async function OrderConfirmedPage({ searchParams }: Props) {
   const paid = session?.status === "complete";
 
   return (
-    <section className="px-4 pb-24 pt-24 sm:px-8">
+    <section className="mx-auto flex max-w-[460px] flex-col gap-3 px-4 py-20 leading-[1.35]">
       {paid && <ClearCart />}
-      <p className="mb-8 uppercase text-rust">{paid ? "Order confirmed" : "Order status"}</p>
-      <h1 className="headline-xl text-[clamp(56px,10vw,150px)]">{paid ? "On press." : "Not found."}</h1>
-      <div className="prose-body mt-12 flex max-w-[560px] flex-col gap-4 text-body">
-        {paid ? (
-          <>
-            <p>
-              Thanks. Your payment of {formatPrice(session.amount_total ?? 0, true)} went through, and your order is
-              headed to print. A receipt is on its way to {session.customer_details?.email ?? "your inbox"}.
-            </p>
-            <p>
-              Orders ship in 3 to 7 business days, and you&apos;ll get tracking by email once it leaves. Questions?{" "}
-              <a href={SUPPORT_MAILTO} className="text-paper underline underline-offset-2 hover:text-rust">
-                {SUPPORT_EMAIL}
-              </a>
-            </p>
-          </>
-        ) : (
+      <h1 className="font-bold">{paid ? "order confirmed. on press." : "order not found."}</h1>
+      {paid ? (
+        <>
           <p>
-            We couldn&apos;t find a completed order for this link. If you were charged, email{" "}
-            <a href={SUPPORT_MAILTO} className="text-paper underline underline-offset-2 hover:text-rust">
+            Thanks. Your payment of {formatPrice(session.amount_total ?? 0, true)} went through, and your order is
+            headed to print. A receipt is on its way to {session.customer_details?.email ?? "your inbox"}.
+          </p>
+          <p>
+            Orders ship in 3 to 7 business days, and you&apos;ll get tracking by email once it leaves. Questions?{" "}
+            <a href={SUPPORT_MAILTO} className="underline underline-offset-2">
               {SUPPORT_EMAIL}
             </a>
-            .
           </p>
-        )}
-      </div>
-      <Link
-        href="/#collection"
-        className="mt-12 inline-block border border-paper px-9 py-5 font-medium uppercase hover:bg-paper hover:text-ink"
-      >
-        Back to the collection
+        </>
+      ) : (
+        <p>
+          We couldn&apos;t find a completed order for this link. If you were charged, email{" "}
+          <a href={SUPPORT_MAILTO} className="underline underline-offset-2">
+            {SUPPORT_EMAIL}
+          </a>
+          .
+        </p>
+      )}
+      <Link href="/" className="mt-4 underline underline-offset-2">
+        back to shop
       </Link>
     </section>
   );

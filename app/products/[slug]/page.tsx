@@ -3,8 +3,10 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { JsonLd } from "@/components/JsonLd";
 import { ProductConfigurator } from "@/components/ProductConfigurator";
 import { getDesignBySlug, getDesigns } from "@/lib/catalog";
+import { primaryCategory } from "@/lib/categories";
 import { PRINT_METHOD_COPY } from "@/lib/copy";
 import type { StorefrontDesign } from "@/lib/designs";
+import { storySections } from "@/lib/product";
 import { quoteForProduct } from "@/lib/shipping";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
@@ -60,7 +62,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 function metaDescription(d: StorefrontDesign): string {
   const p = d.products[0];
+  // The seller's own first paragraph says what the design is; it leads when there is one.
+  const lead = storySections(p.story).about[0];
   const parts = [
+    lead,
     p.subtitle && (/[.!?]$/.test(p.subtitle) ? p.subtitle : `${p.subtitle}.`),
     p.blank ? `${p.blank.name}, ${p.blank.weight} ${p.blank.fabric.toLowerCase()}.` : null,
     d.products.length > 1 ? `Available in ${d.products.length} ${d.picker === "Style" ? "styles" : "blanks"}.` : null,
@@ -146,7 +151,7 @@ async function productJsonLd(d: StorefrontDesign) {
     "@type": "ProductGroup",
     "@id": `${url}#product`,
     name: d.name,
-    description: [lead.subtitle, lead.spec?.summary].filter(Boolean).join(" ") || d.name,
+    description: [...storySections(lead.story).about, lead.subtitle, lead.spec?.summary].filter(Boolean).join(" ") || d.name,
     url,
     productGroupID: d.slug,
     image: lead.images.slice(0, 8).map((i) => i.src),
@@ -162,12 +167,14 @@ async function productJsonLd(d: StorefrontDesign) {
 }
 
 function breadcrumbJsonLd(d: StorefrontDesign) {
+  const category = primaryCategory(d);
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Shop", item: `${SITE_URL}/` },
-      { "@type": "ListItem", position: 2, name: d.name, item: `${SITE_URL}/products/${d.slug}` },
+      { "@type": "ListItem", position: 2, name: category.title, item: `${SITE_URL}/collections/${category.slug}` },
+      { "@type": "ListItem", position: 3, name: d.name, item: `${SITE_URL}/products/${d.slug}` },
     ],
   };
 }
@@ -182,10 +189,10 @@ export default async function ProductPage({ params }: Props) {
   const { design } = found;
 
   return (
-    <div className="pb-16 md:pb-0">
+    <>
       <JsonLd data={await productJsonLd(design)} />
       <JsonLd data={breadcrumbJsonLd(design)} />
-      <ProductConfigurator design={design} stickyBar />
-    </div>
+      <ProductConfigurator design={design} />
+    </>
   );
 }

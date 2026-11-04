@@ -1,31 +1,34 @@
 import Link from "next/link";
 import { DIALUP_HREF } from "@/lib/dialup";
-import { POPUP_URL, SITE_NAME, SUPPORT_MAILTO } from "@/lib/site";
+import { POPUP_URL, SUPPORT_MAILTO } from "@/lib/site";
 
 const LINKS = [
-  { label: "Terms", href: `${POPUP_URL}/terms-and-conditions` },
-  { label: "Privacy", href: `${POPUP_URL}/privacy-policy` },
-  { label: "Contact", href: SUPPORT_MAILTO },
+  { label: "contact", href: SUPPORT_MAILTO },
+  { label: "terms", href: `${POPUP_URL}/terms-and-conditions` },
+  { label: "privacy", href: `${POPUP_URL}/privacy-policy` },
+  { label: "archive", href: `${POPUP_URL}/products` },
 ];
 
+/** Desktop: one quiet row under the grid. Phones: a black band of centered links. */
 export function SiteFooter() {
   return (
-    <footer className="site-footer flex flex-wrap items-end justify-between gap-8 border-t border-line px-4 py-12 uppercase sm:px-8">
-      <p className="headline-xl text-[clamp(48px,8vw,120px)] leading-[0.85]">{SITE_NAME}</p>
-      <nav aria-label="Footer" className="flex flex-wrap gap-6 text-muted">
-        {LINKS.map((l) => (
-          <a key={l.label} href={l.href} className="hover:text-rust">
-            {l.label}
-          </a>
-        ))}
-        <Link href="/#collection" className="border-b border-paper text-paper hover:border-rust hover:text-rust">
-          The Archive
+    <footer className="site-footer mt-auto w-full max-md:mt-16 max-md:bg-black max-md:py-10 max-md:text-white md:pt-20">
+      <div className="mx-auto flex max-w-[1000px] flex-wrap justify-between gap-x-4 gap-y-4 px-4 pb-8 max-md:flex-col max-md:items-center max-md:pb-0">
+        <Link href="/" className="link">
+          shop all
         </Link>
-      </nav>
-      {/* Easter egg: the whole site, 1999 Angelfire style. */}
-      <a href={DIALUP_HREF} className="dialup-hide w-full text-[10px] normal-case tracking-normal text-placeholder hover:text-rust">
-        Best viewed in Netscape Navigator 4.0 · Dial-Up Edition
-      </a>
+        <nav aria-label="Footer" className="flex flex-wrap justify-center gap-x-4 gap-y-2">
+          {LINKS.map((l) => (
+            <a key={l.label} href={l.href} className="link">
+              {l.label}
+            </a>
+          ))}
+          {/* Easter egg: the whole site, 1999 Angelfire style. */}
+          <a href={DIALUP_HREF} className="dialup-hide link text-muted" title="Dial-Up Edition">
+            1999
+          </a>
+        </nav>
+      </div>
     </footer>
   );
 }

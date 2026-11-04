@@ -14,8 +14,6 @@ import { BagButton } from "../CartProvider";
 const NAV = [
   { label: "Home", href: "/" },
   { label: "Catalog", href: "/#collection" },
-  { label: "Latest", href: "/#featured" },
-  { label: "Blueprint", href: "/#blueprint" },
 ];
 
 export async function DialUpBanner() {

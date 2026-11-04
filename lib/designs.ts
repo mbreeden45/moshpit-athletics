@@ -129,8 +129,7 @@ export function groupDesigns(products: StorefrontProduct[]): StorefrontDesign[] 
       const n = (seenKeys.get(base) ?? 0) + 1;
       seenKeys.set(base, n);
       const blankKey = n === 1 ? base : `${base}-${n}`;
-      // Only Style pages show the story; elsewhere it stays out of the page payload.
-      return { ...p, blankKey, story: picker === "Style" ? p.story : [] };
+      return { ...p, blankKey };
     });
 
     const name = designName(blanks);

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getDesigns } from "@/lib/catalog";
+import { getCategories } from "@/lib/categories";
 import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 3600;
@@ -19,6 +20,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 1,
     },
+    ...getCategories(designs).map((c) => ({
+      url: `${SITE_URL}/collections/${c.slug}`,
+      lastModified: new Date(c.designs.reduce((max, d) => (d.updatedAt > max ? d.updatedAt : max), "")),
+      changeFrequency: "daily" as const,
+      priority: 0.9,
+    })),
     ...designs.map((d) => ({
       url: `${SITE_URL}/products/${d.slug}`,
       lastModified: new Date(d.updatedAt),
