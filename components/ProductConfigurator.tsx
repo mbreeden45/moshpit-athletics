@@ -387,6 +387,10 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
                 ))}
               </ul>
             )}
+            {/* Descriptions never name the blank (see splitStory); it's listed here instead. */}
+            <p>
+              <span className="font-bold">printed on:</span> {product.blankLabel}
+            </p>
             {blankSummary && <p>{blankSummary}</p>}
             {specPoints.length > 0 && (
               <ul className="list-['–_'] pl-3">
