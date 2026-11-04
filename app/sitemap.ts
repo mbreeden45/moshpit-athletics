@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getDesigns } from "@/lib/catalog";
 import { getCategories } from "@/lib/categories";
+import { publicImageUrl } from "@/lib/media";
 import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 3600;
@@ -36,7 +37,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(d.updatedAt),
       changeFrequency: "weekly" as const,
       priority: 0.8,
-      images: d.products[0].images.slice(0, 4).map((i) => i.src),
+      images: d.products[0].images.slice(0, 4).map((i) => publicImageUrl(i.src)),
     })),
   ];
 }

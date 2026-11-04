@@ -7,6 +7,7 @@ import { primaryCategory } from "@/lib/categories";
 import { PRINT_METHOD_COPY } from "@/lib/copy";
 import type { StorefrontDesign } from "@/lib/designs";
 import { storySections } from "@/lib/product";
+import { publicImageUrl } from "@/lib/media";
 import { quoteForProduct } from "@/lib/shipping";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
@@ -33,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const description = metaDescription(design);
   const images = product.images
     .slice(0, 4)
-    .map((img) => ({ url: img.src, alt: `${design.fullName} — ${img.position.replace("_", " ")}` }));
+    .map((img) => ({ url: publicImageUrl(img.src), alt: `${design.fullName} — ${img.position.replace("_", " ")}` }));
 
   return {
     title,
@@ -130,7 +131,7 @@ async function productJsonLd(d: StorefrontDesign) {
         name: [d.fullName, d.products.length > 1 ? d.optionLabels[i] : null, [color, size].filter(Boolean).join(" / ")]
           .filter(Boolean)
           .join(" – "),
-        ...(image ? { image } : {}),
+        ...(image ? { image: publicImageUrl(image) } : {}),
         ...(color ? { color } : {}),
         ...(size ? { size } : {}),
         offers: {
@@ -158,7 +159,7 @@ async function productJsonLd(d: StorefrontDesign) {
       d.name,
     url,
     productGroupID: d.slug,
-    image: lead.images.slice(0, 8).map((i) => i.src),
+    image: lead.images.slice(0, 8).map((i) => publicImageUrl(i.src)),
     brand: { "@type": "Brand", name: SITE_NAME },
     category: lead.kind.many,
     variesBy: [

@@ -1,6 +1,7 @@
 import { getDesigns } from "@/lib/catalog";
 import type { StorefrontDesign } from "@/lib/designs";
 import { storySections, type StorefrontProduct } from "@/lib/product";
+import { publicImageUrl } from "@/lib/media";
 import { quoteForProduct } from "@/lib/shipping";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
@@ -57,7 +58,9 @@ async function items(d: StorefrontDesign): Promise<string[]> {
       const images = [
         ...p.images.filter((img) => img.variantIds.includes(v.id)).map((img) => img.src),
         p.defaultImage,
-      ].filter((src, k, all): src is string => Boolean(src) && all.indexOf(src) === k);
+      ]
+        .filter((src, k, all): src is string => Boolean(src) && all.indexOf(src) === k)
+        .map(publicImageUrl);
       const title = [d.fullName, d.products.length > 1 ? d.optionLabels[i] : null, [color, size].filter(Boolean).join(" / ")]
         .filter(Boolean)
         .join(" – ")
