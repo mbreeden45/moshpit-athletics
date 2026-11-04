@@ -20,6 +20,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 1,
     },
+    ...["/terms", "/privacy"].map((path) => ({
+      url: `${SITE_URL}${path}`,
+      changeFrequency: "yearly" as const,
+      priority: 0.2,
+    })),
     ...getCategories(designs).map((c) => ({
       url: `${SITE_URL}/collections/${c.slug}`,
       lastModified: new Date(c.designs.reduce((max, d) => (d.updatedAt > max ? d.updatedAt : max), "")),

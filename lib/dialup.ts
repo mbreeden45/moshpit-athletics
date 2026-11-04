@@ -1,17 +1,33 @@
 /**
- * "Dial-Up Edition": an opt-in 1999 Angelfire skin over the whole site.
- * /?dialup turns it on (remembered in localStorage), /?2026 turns it off.
+ * "1999": an easter-egg Angelfire skin over the whole site.
+ * /?1999 (or the older /?dialup) turns it on for the rest of the browser
+ * session only, so every new visit starts on the normal site; /?2026 turns it off.
  * The <html data-era="dialup"> attribute drives everything: the skin is CSS
  * (app/dialup.css) plus a few decorations that only render in that era.
  */
 
 export const ERA_ATTR = "era";
 export const DIALUP = "dialup";
-export const DIALUP_HREF = "/?dialup";
+export const DIALUP_HREF = "/?1999";
 export const EXIT_HREF = "/?2026";
 
-/** Runs in <head> before paint, so the page never flashes the wrong era. */
-export const ERA_SCRIPT = `(function(){var d=document.documentElement,k="mpa-era";try{var q=new URLSearchParams(location.search);if(q.has("dialup"))localStorage.setItem(k,"dialup");if(q.has("2026"))localStorage.removeItem(k);if(localStorage.getItem(k)==="dialup")d.dataset.${ERA_ATTR}="dialup"}catch(e){if(/[?&]dialup/.test(location.search))d.dataset.${ERA_ATTR}="dialup"}})();`;
+export const ERA_KEY = "mpa-era";
+
+/** True when this browser session is in 1999 mode (after ERA_SCRIPT has run). */
+export function eraIsOn(): boolean {
+  try {
+    return window.sessionStorage.getItem(ERA_KEY) === DIALUP;
+  } catch {
+    return /[?&](1999|dialup)\b/.test(window.location.search);
+  }
+}
+
+/**
+ * Runs in <head> before paint, so the page never flashes the wrong era.
+ * Session storage, not local: closing the tab ends 1999. Also clears the
+ * old permanent localStorage flag from before it was session-only.
+ */
+export const ERA_SCRIPT = `(function(){var d=document.documentElement,k="${ERA_KEY}";try{localStorage.removeItem(k)}catch(e){}try{var q=new URLSearchParams(location.search);if(q.has("1999")||q.has("dialup"))sessionStorage.setItem(k,"dialup");if(q.has("2026"))sessionStorage.removeItem(k);if(sessionStorage.getItem(k)==="dialup")d.dataset.${ERA_ATTR}="dialup"}catch(e){if(/[?&](1999|dialup)/.test(location.search))d.dataset.${ERA_ATTR}="dialup"}})();`;
 
 /** Always 420. There is no database. */
 export const HIT_COUNT = "000420";

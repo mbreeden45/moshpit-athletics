@@ -49,7 +49,7 @@ export async function DialUpBanner() {
 
 export function DialUpSidebar() {
   return (
-    <aside className="dialup-only dialup-sidebar" aria-label="Dial-Up Edition navigation">
+    <aside className="dialup-only dialup-sidebar" aria-label="1999 navigation">
       <nav className="dialup-pills">
         {NAV.map((item) => (
           <Link key={item.label} href={item.href} className="dialup-pill">

@@ -7,7 +7,7 @@ import { DialUpBanner, DialUpMarquee, DialUpSidebar } from "@/components/dialup/
 import { DialUpFx } from "@/components/dialup/DialUpFx";
 import { JsonLd } from "@/components/JsonLd";
 import { ERA_SCRIPT } from "@/lib/dialup";
-import { POPUP_URL, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import { ETSY_REVIEWS, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 // Archivo with the width axis, for the condensed wordmark only. Everything else is Courier.
@@ -47,7 +47,7 @@ const organizationLd = {
   "@id": `${SITE_URL}/#organization`,
   name: SITE_NAME,
   url: SITE_URL,
-  sameAs: [POPUP_URL],
+  sameAs: [ETSY_REVIEWS.url.split("#")[0]],
   // Store-wide policy for Google merchant listings: printed to order, final sale.
   hasMerchantReturnPolicy: {
     "@type": "MerchantReturnPolicy",

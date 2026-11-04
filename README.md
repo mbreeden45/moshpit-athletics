@@ -18,7 +18,7 @@ npm run dev
 | --- | --- | --- |
 | `PRINTIFY_API_TOKEN` | server only | Printify personal access token |
 | `PRINTIFY_SHOP_ID` | server only | Pop-Up shop id (`24807399`). If blank, it's found at runtime via `GET /v1/shops.json` (the `storefront` sales channel) |
-| `NEXT_PUBLIC_POPUP_URL` | public | Pop-Up base URL (the Archive nav link and the Terms/Privacy footer links) |
+| `NEXT_PUBLIC_POPUP_URL` | public | Pop-Up base URL. No longer linked from the site; kept for the product data only |
 | `STRIPE_SECRET_KEY` | server only | Stripe secret key (`sk_test_…` while testing, `sk_live_…` to sell) |
 | `STRIPE_WEBHOOK_SECRET` | server only | Signing secret (`whsec_…`) of the Stripe webhook endpoint for `/api/stripe/webhook` |
 | `PRINTIFY_WEBHOOK_SECRET` | server only | Shared secret for Printify's product webhooks (`/api/printify/webhook`); signs `X-Pfy-Signature` |
@@ -153,13 +153,17 @@ it to production. Live-mode payments always create and send.
 Sales tax is not collected yet. To add it, enable Stripe Tax and pass
 `automatic_tax: { enabled: true }` in `app/api/checkout/route.ts`.
 
-## Dial-Up Edition
+## 1999 mode
 
-An opt-in 1999 Angelfire skin over the whole site, reached from the small
-"1999" footer link
-(`/?dialup`, remembered per browser; `/?2026` or "Back to 2026" exits).
+An easter-egg 1999 Angelfire skin over the whole site, reached from the small
+"1999" footer link (`/?1999`; the older `/?dialup` still works). It lasts for
+the browser session only, so every new visit starts on the normal site;
+`/?2026` or "Back to 2026" exits.
 
-- `ERA_SCRIPT` (in `<head>`) sets `<html data-era="dialup">` before paint.
+- `ERA_SCRIPT` (in `<head>`) sets `<html data-era="dialup">` before paint from
+  sessionStorage, and clears the old permanent localStorage flag.
+- `DialUpFx` re-applies the attribute after mount, so a hydration error that
+  re-renders the document can't silently switch 1999 off.
 - `app/dialup.css` re-points the design tokens and restyles everything under
   that attribute; the normal site only sees `.dialup-only { display: none }`.
 - `components/dialup/DialUpChrome.tsx`: banner, sidebar (pill nav, visitor
