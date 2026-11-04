@@ -1,13 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { DIALUP, ERA_ATTR, PLAYLIST } from "@/lib/dialup";
+import { DIALUP, ERA_ATTR, eraIsOn, PLAYLIST } from "@/lib/dialup";
 
-/** Winamp-style player and sparkle cursor; mounts only in the Dial-Up Edition. */
+/** Winamp-style player and sparkle cursor; mounts only in 1999 mode. */
 export function DialUpFx() {
   const [on, setOn] = useState(false);
   useEffect(() => {
-    setOn(document.documentElement.dataset[ERA_ATTR] === DIALUP);
+    // If React had to re-render the document (a hydration error), the era
+    // attribute set before paint is gone; put it back from the session.
+    const root = document.documentElement;
+    if (eraIsOn() && root.dataset[ERA_ATTR] !== DIALUP) root.dataset[ERA_ATTR] = DIALUP;
+    setOn(root.dataset[ERA_ATTR] === DIALUP);
   }, []);
   if (!on) return null;
   return (
