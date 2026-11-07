@@ -19,7 +19,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage
       title="privacy"
-      updated="November 4, 2026"
+      updated="November 7, 2026"
       intro={
         <p>
           This explains what {SITE_NAME} (&ldquo;we&rdquo;) collects when you visit moshpitathletics.com or place an
@@ -79,6 +79,11 @@ export default function PrivacyPage() {
                 </li>
                 <li>
                   <strong>Vercel</strong> hosts the site.
+                </li>
+                <li>
+                  <strong>Google Customer Reviews</strong>: after you order, the confirmation page offers an optional
+                  Google survey. Only if you opt in, Google receives your email, order number and estimated delivery date
+                  to send it, under Google&rsquo;s privacy policy.
                 </li>
               </ul>
               <p>

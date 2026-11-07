@@ -33,6 +33,9 @@ export const POPUP_URL = normalizeUrl(
 );
 
 export const SUPPORT_EMAIL = "support@moshpitathletics.com";
+
+/** Google Merchant Center account, for the Google Customer Reviews opt-in. */
+export const GOOGLE_MERCHANT_ID = 5898760113;
 export const SUPPORT_MAILTO = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Order Inquiry")}`;
 
 export const SITE_DESCRIPTION =
