@@ -113,6 +113,8 @@ export async function POST(req: NextRequest) {
       // Several Printify print providers require a phone number on the order.
       phone_number_collection: { enabled: true },
       shipping_options: shippingOptions,
+      // Promotion codes are created in the Stripe dashboard; none work until one exists.
+      allow_promotion_codes: true,
       custom_text: { submit: { message: STRIPE_SUBMIT_NOTE } },
       success_url: `${origin}/order/confirmed?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/?cart=open`,
