@@ -397,6 +397,37 @@ function cleanSubtitle(subtitle: string | null, bp: PrintifyBlueprint | null, bl
  * A story split at a "Details:" style heading: the prose above it is the
  * product description; the lines below it are notes for the details panel.
  */
+/**
+ * Lines pasted in from marketplace listings that don't belong in a story on
+ * this site: size charts (the size picker and specs cover them), listing
+ * boilerplate, and shipping, returns and print-method notes that the site
+ * states once, correctly, elsewhere.
+ */
+const LISTING_JUNK = [
+  /^(xxs|xs|s|m|l|xl|xxl|\d?x+l|\dxl)$/i, // size chart columns
+  /^[\d.,]+$/, // size chart numbers
+  /\b(width|length|sleeve length|tolerance)\b.*,\s*in\.?$/i, // size chart rows
+  /^-{2,}$/,
+  /^(colou?rs?|sizes?)\s*:/i,
+  /^(design features|important notes|item details)\s*:?$/i,
+  /\b(ships? within|business days|allow one week|slightly delayed|holidays approach)/i,
+  /\bno returns\b|\brefunds?\b/i,
+  /\b(dtg|direct to garment|screen ?print)/i,
+  /check out my store|reviews (on|from) (that|my)/i,
+];
+
+/** The seller's story, cleaned for a "more about this design" section. */
+export function storyForDisplay(lines: string[]): string[] {
+  return lines
+    .map((l) =>
+      l
+        .replace(/^item details\s*/i, "")
+        .replace(/^this is a,?\s*recreated by me,?\s*/i, "Recreated by me, ")
+        .trim(),
+    )
+    .filter((l) => l.length > 0 && !LISTING_JUNK.some((re) => re.test(l)));
+}
+
 export function storySections(story: string[]): { about: string[]; notes: string[] } {
   const i = story.findIndex((l) => /^(details|features|specs|product details)\s*:?$/i.test(l.trim()));
   return i === -1 ? { about: story, notes: [] } : { about: story.slice(0, i), notes: story.slice(i + 1) };

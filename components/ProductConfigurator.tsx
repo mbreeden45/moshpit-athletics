@@ -7,7 +7,7 @@ import { formatInches } from "@/lib/blanks";
 import type { CartItem } from "@/lib/cart";
 import { CARE_COPY, FIT_COPY, PDP_NOTE, PRINT_METHOD_COPY, PRINT_PROFILE, SHIPPING_RETURNS } from "@/lib/copy";
 import type { StorefrontDesign } from "@/lib/designs";
-import { formatPrice, storySections, type ProductImage, type StorefrontProduct } from "@/lib/product";
+import { formatPrice, storyForDisplay, storySections, type ProductImage, type StorefrontProduct } from "@/lib/product";
 import { SUPPORT_MAILTO } from "@/lib/site";
 import { BRAND_DISCLAIMER } from "@/lib/specs";
 import { useCart } from "./CartProvider";
@@ -174,13 +174,18 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
   const spec = product.spec;
   // The seller's words about the design lead; without them, the blank's spec summary stands in.
   const { about, notes } = storySections(product.story);
-  const description = [
-    // What the design references, in searchable words (lib/search-copy.ts), always first.
-    ...(design.searchLine ? [design.searchLine] : []),
-    ...(about.length > 0 ? about : [spec?.summary ?? "Printed to order in the USA."]),
-  ];
-  // When the story fills the description, the blank's summary moves into details.
-  const blankSummary = about.length > 0 ? spec?.summary : undefined;
+  const story = storyForDisplay(about);
+  // Every page opens the same way: what the design is, then one line in the
+  // seller's voice (lib/search-copy.ts). Style designs use each style's own first line.
+  const intro = design.intro ?? (design.picker === "Style" ? story[0] : undefined);
+  const lead = [design.searchLine, intro].filter((l): l is string => Boolean(l));
+  const description = lead.length > 0 ? lead : [spec?.summary ?? "Printed to order in the USA."];
+  // The rest of a long story goes into "more about this design"; short ones are
+  // already summed up by the intro.
+  const norm = (l: string) => l.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const rest = story.filter((l) => !intro || norm(l) !== norm(intro));
+  const moreStory = rest.join(" ").split(/\s+/).length >= 45 ? rest : [];
+  const blankSummary = lead.length > 0 ? spec?.summary : undefined;
   const specPoints = [
     // Prints' spec copy already covers their inks.
     ...product.printMethods.filter((m) => m !== "digital").map((m) => PRINT_METHOD_COPY[m]),
@@ -383,6 +388,19 @@ export function ProductConfigurator({ design }: { design: StorefrontDesign }) {
         </div>
 
         <div className="border-b border-faint max-md:order-9">
+          {moreStory.length > 0 && (
+            <Info title="more about this design">
+              {moreStory.map((line) =>
+                /:$/.test(line) && line.length < 48 ? (
+                  <p key={line} className="font-bold">
+                    {line.replace(/:$/, "")}
+                  </p>
+                ) : (
+                  <p key={line}>{line}</p>
+                ),
+              )}
+            </Info>
+          )}
           <Info title="details">
             {notes.length > 0 && (
               <ul className="list-['–_'] pl-3">
