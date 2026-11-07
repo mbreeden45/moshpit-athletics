@@ -10,6 +10,8 @@ const nextConfig: NextConfig = {
     ).concat(
       // "all" is the home page.
       ["/collections", "/collections/all"].map((source) => ({ source, destination: "/", permanent: true })),
+      // Slug the Bridgers tee briefly had after it was recreated in Printify.
+      { source: "/products/bridgers-26-skeleton-graphic-tee", destination: "/products/the-skeleton-hoops-tee", permanent: true },
     );
   },
   images: {
