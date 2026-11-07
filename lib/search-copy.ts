@@ -6,12 +6,15 @@
  *   under the product name, structured data, image alt text and the Google
  *   product feed: "The Flagg Bars Tee: Cooper Flagg x Black Flag Shirt".
  * - `line` leads the product description.
+ * - `intro` follows it: one short line in the seller's own voice, so every
+ *   product page opens the same way (two sentences). The seller's full story
+ *   sits in a collapsible "more about this design" section below.
  *
  * Names of bands, teams, players and events describe what the art
  * references; every line says the design is an unofficial fan tribute.
  */
 
-export type SearchCopy = { keywords: string; line: string };
+export type SearchCopy = { keywords: string; line: string; intro?: string };
 
 const TRIBUTE = "Unofficial fan tribute.";
 
@@ -20,6 +23,13 @@ export const SEARCH_COPY: Record<string, SearchCopy> = {
   "6ae91c01c23e022f480b5502": {
     keywords: "Phoebe Bridgers Skeleton x Indiana Basketball Shirt",
     line: `A vintage Indiana basketball crest with a skeleton hand palming the ball, for Phoebe Bridgers fans with a midwest hoops streak. ${TRIBUTE}`,
+    intro: `A tribute to midwestern basketball heritage, reimagined through an indie-goth lens.`,
+  },
+  // Bridgers '26, recreated in Printify with a new id
+  "6aeba05746bce03c1101d029": {
+    keywords: "Phoebe Bridgers Skeleton x Indiana Basketball Shirt",
+    line: `A vintage Indiana basketball crest with a skeleton hand palming the ball, for Phoebe Bridgers fans with a midwest hoops streak. ${TRIBUTE}`,
+    intro: `A tribute to midwestern basketball heritage, reimagined through an indie-goth lens.`,
   },
   // Pasadena caps (all three styles)
   "6ae253dc0626d40cc4067419": {
@@ -29,61 +39,76 @@ export const SEARCH_COPY: Record<string, SearchCopy> = {
   "6a99f8b475e2ac9a620571b9": {
     keywords: "Blue Jays vs Expos Canada Day Shirt",
     line: `A vintage-style Canada Day matchup tee: the Toronto Blue Jays against the Montreal Expos, redrawn from a classic stadium graphic. ${TRIBUTE}`,
+    intro: `I spotted this graphic on my first trip to Toronto, snapped a picture, and couldn't find it anywhere for a fair price. So here we are.`,
   },
   "6a7f60333e15472e280b0695": {
     keywords: "RÜFÜS DU SOL Rose Bowl 2025 Shirt",
     line: `A rose-and-script tee for RÜFÜS DU SOL's sold-out 2025 show at the Rose Bowl in Pasadena. ${TRIBUTE}`,
+    intro: `Did you know I like the Rose Bowl? Anyway, here ya go.`,
   },
   "6a7f6507efd4d89d1e0bb81b": {
     keywords: "RÜFÜS DU SOL Rose Bowl 2025 Poster",
     line: `A matte art print for RÜFÜS DU SOL's 2025 night at the Rose Bowl in Pasadena. ${TRIBUTE}`,
+    intro: `One night in Pasadena, for your wall.`,
   },
   "69d454edf6c67e08bf06d7b8": {
     keywords: "Davis Schneider Blue Jays Baseball Card Shirt",
     line: `Toronto Blue Jays infielder Davis Schneider, mustache and all, on a retro baseball card tee. ${TRIBUTE}`,
+    intro: `Your favorite triple-A Jays player, now on a heavyweight tee.`,
   },
   "6a4d7e600e9c38654108213b": {
     keywords: "Ernie Clement Blue Jays Baseball Card Shirt",
     line: `A painted trading-card portrait of Toronto Blue Jays third baseman Ernie Clement, front and back. ${TRIBUTE}`,
+    intro: `Clement at third, painted like the card you wish you'd pulled.`,
   },
   "69377e0a9837d19d390e5578": {
     keywords: "Turnover Peripheral Vision Clown Shirt",
     line: `The clown from Turnover's Peripheral Vision era, back on a shirt after fans asked for it. ${TRIBUTE}`,
+    intro: `Some guy on Reddit mentioned wanting a reprint. So here it is.`,
   },
   "693769c56a099916980abb74": {
     keywords: "Hot Mulligan Detroit Tiger Shirt, Fillmore 2025",
     line: `A tiger-and-Old-English tee for Hot Mulligan's December 2025 shows at The Fillmore Detroit. ${TRIBUTE}`,
+    intro: `Redrawn by me for everyone who missed the Fillmore shows.`,
   },
   "690ba5cec66e799d2a063832": {
     keywords: "Dodgers Japanese ドジャース Logo Shirt",
     line: `The Los Angeles Dodgers script, written in Japanese katakana (ドジャース), with a fastball streaking through. ${TRIBUTE}`,
+    intro: `I printed this one before anyone else was selling it. DOJASU!`,
   },
   "68f068010f158415e405017c": {
     keywords: "Ohtani Yamamoto Sasaki Dodgers Japanese Shirt",
     line: `The Dodgers' Japanese trio, Shohei Ohtani, Yoshinobu Yamamoto and Roki Sasaki, under the team name in katakana. ${TRIBUTE}`,
+    intro: `DOJASU! PACIFIC POWER! ROKI YOSHI SHO TIME!`,
   },
   "68ed6fceed926f86860dfb34": {
     keywords: "My Chemical Romance Philadelphia 2025 Bat Hoodie",
     line: `The bat design from My Chemical Romance's 2025 show at Citizens Bank Park in Philadelphia, on a heavyweight hoodie. ${TRIBUTE}`,
+    intro: `You asked, and I listened: the Philly bat design, now on a hoodie for the colder months.`,
   },
   "68ed6fcded926f86860dfb32": {
     keywords: "My Chemical Romance Philadelphia 2025 Bat Shirt",
     line: `The bat design from My Chemical Romance's 2025 show at Citizens Bank Park in Philadelphia. ${TRIBUTE}`,
+    intro: `Redrawn by me for everyone who missed the Philly show.`,
   },
   "68ed6fcaed926f86860dfb2f": {
     keywords: "Turnstile Glow On x Turnover Peripheral Vision Shirt",
     line: `Turnstile's Glow On meets Turnover's Peripheral Vision, for everyone who has mixed up the two bands. ${TRIBUTE}`,
+    intro: `For a while everyone in my life mixed up these two. Now you have your favorite shirt.`,
   },
   "68ed6fc6ed926f86860dfb2d": {
     keywords: "Cooper Flagg x Black Flag Shirt",
     line: `Cooper Flagg's name over Black Flag's four-bar logo, hardcore punk meets basketball. ${TRIBUTE}`,
+    intro: `Your favorite band now plays in the NBA.`,
   },
   "68ed6fc4ed926f86860dfb29": {
     keywords: "My Chemical Romance Dodger Stadium Black Parade Shirt",
     line: `"Blue Heaven on Earth" turned black for My Chemical Romance's two sold-out Dodger Stadium shows, in a Black Parade style. ${TRIBUTE}`,
+    intro: `For anyone who was there both nights, or wished they were.`,
   },
   "68ed6fc2ed926f86860dfb28": {
     keywords: "My Chemical Romance Shaky Knees 2025 Atlanta Scythe Shirt",
     line: `The scythe-and-script design from My Chemical Romance's 2025 Shaky Knees festival set in Atlanta. ${TRIBUTE}`,
+    intro: `Redrawn by me for everyone who missed Shaky Knees, with a few Braves-inspired colorways.`,
   },
 };

@@ -1,6 +1,6 @@
 import { getDesigns } from "@/lib/catalog";
 import type { StorefrontDesign } from "@/lib/designs";
-import { storySections, type StorefrontProduct } from "@/lib/product";
+import { storyForDisplay, storySections, type StorefrontProduct } from "@/lib/product";
 import { publicImageUrl } from "@/lib/media";
 import { quoteForProduct } from "@/lib/shipping";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
@@ -40,7 +40,12 @@ function googleCategory(p: StorefrontProduct): string {
 const isApparel = (p: StorefrontProduct) => p.isGarment || p.kind.one === "Cap";
 
 async function items(d: StorefrontDesign): Promise<string[]> {
-  const description = [d.searchLine, ...storySections(d.products[0].story).about, d.products[0].spec?.summary]
+  const description = [
+    d.searchLine,
+    d.intro,
+    ...storyForDisplay(storySections(d.products[0].story).about),
+    d.products[0].spec?.summary,
+  ]
     .filter(Boolean)
     .join(" ")
     .slice(0, 4900);

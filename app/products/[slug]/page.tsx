@@ -6,7 +6,7 @@ import { getDesignBySlug, getDesigns } from "@/lib/catalog";
 import { primaryCategory } from "@/lib/categories";
 import { PRINT_METHOD_COPY } from "@/lib/copy";
 import type { StorefrontDesign } from "@/lib/designs";
-import { storySections } from "@/lib/product";
+import { storyForDisplay, storySections } from "@/lib/product";
 import { publicImageUrl } from "@/lib/media";
 import { quoteForProduct } from "@/lib/shipping";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
@@ -65,7 +65,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 function metaDescription(d: StorefrontDesign): string {
   const p = d.products[0];
   // The seller's own first paragraph says what the design is; it leads when there is one.
-  const lead = storySections(p.story).about[0];
+  const lead = d.intro ?? storyForDisplay(storySections(p.story).about)[0];
   const parts = [
     d.searchLine,
     lead,
@@ -155,7 +155,9 @@ async function productJsonLd(d: StorefrontDesign) {
     "@id": `${url}#product`,
     name: d.fullName,
     description:
-      [d.searchLine, ...storySections(lead.story).about, lead.subtitle, lead.spec?.summary].filter(Boolean).join(" ") ||
+      [d.searchLine, d.intro, ...storyForDisplay(storySections(lead.story).about), lead.subtitle, lead.spec?.summary]
+        .filter(Boolean)
+        .join(" ") ||
       d.name,
     url,
     productGroupID: d.slug,

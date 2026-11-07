@@ -29,6 +29,8 @@ export type StorefrontDesign = {
   keywords: string | null;
   /** One sentence leading the description. */
   searchLine: string | null;
+  /** One short line in the seller's voice that follows it. */
+  intro: string | null;
   /** "<name>: <keywords>", or just the name. For titles, alt text and feeds. */
   fullName: string;
 };
@@ -62,6 +64,7 @@ const DESIGN_NAMES: Record<string, string> = {
   "68ed6fc4ed926f86860dfb29": "The Black Heaven Tee",
   "68ed6fc2ed926f86860dfb28": "The Scythe Tee",
   "6ae91c01c23e022f480b5502": "The Skeleton Hoops Tee",
+  "6aeba05746bce03c1101d029": "The Skeleton Hoops Tee",
 };
 
 /**
@@ -153,6 +156,7 @@ export function groupDesigns(products: StorefrontProduct[]): StorefrontDesign[] 
       name,
       keywords: search?.keywords ?? null,
       searchLine: search?.line ?? null,
+      intro: search?.intro ?? null,
       fullName: search ? `${name}: ${search.keywords}` : name,
       products: blanks,
       picker,
