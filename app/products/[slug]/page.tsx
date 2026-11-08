@@ -132,6 +132,8 @@ async function productJsonLd(d: StorefrontDesign) {
           .filter(Boolean)
           .join(" – "),
         ...(image ? { image: publicImageUrl(image) } : {}),
+        // Required on every variant when the group varies by material (designs on several blanks).
+        material: p.spec?.material ?? p.blankLabel,
         ...(color ? { color } : {}),
         ...(size ? { size } : {}),
         offers: {
@@ -164,11 +166,10 @@ async function productJsonLd(d: StorefrontDesign) {
     image: lead.images.slice(0, 8).map((i) => publicImageUrl(i.src)),
     brand: { "@type": "Brand", name: SITE_NAME },
     category: lead.kind.many,
-    variesBy: [
-      ...(d.products.some((p) => p.colors.length > 1) ? ["https://schema.org/color"] : []),
-      ...(d.products.some((p) => p.sizes.length > 1) ? ["https://schema.org/size"] : []),
-      ...(d.products.length > 1 ? ["https://schema.org/material"] : []),
-    ],
+    // Whatever actually differs across the group's variants, so Google can tell them apart.
+    variesBy: (["color", "size", "material"] as const)
+      .filter((prop) => new Set(hasVariant.map((v) => (v as Record<string, unknown>)[prop])).size > 1)
+      .map((prop) => `https://schema.org/${prop}`),
     hasVariant,
   };
 }

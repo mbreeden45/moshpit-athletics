@@ -7,6 +7,8 @@
  */
 
 export type GarmentSpec = {
+  /** Short material for Google's structured data and feed ("7.5 oz heavyweight cotton"). */
+  material: string;
   /** One or two plain sentences on what the blank is and how it wears. */
   summary: string;
   /** Short factual points. */
@@ -19,6 +21,7 @@ export const BRAND_DISCLAIMER =
 const SPECS: Record<number, GarmentSpec> = {
   // Shaka Wear SHMHSS — Max Heavyweight Short Sleeve
   1716: {
+    material: "7.5 oz heavyweight cotton",
     summary:
       "A dense, 7.5 oz cotton tee with a boxy body and a slight drop at the shoulder. The thick collar keeps its shape and the cotton is built to resist shrinking, so the fit you order is the fit you keep.",
     points: [
@@ -34,6 +37,7 @@ const SPECS: Record<number, GarmentSpec> = {
   },
   // Comfort Colors 1717 — Garment-Dyed T-shirt
   706: {
+    material: "6.1 oz garment-dyed ring-spun cotton",
     summary:
       "Dyed after it's sewn, so the color settles into a soft, lived-in tone from the first wear. Ring-spun cotton, a relaxed cut and a tubular body with no side seams.",
     points: [
@@ -48,6 +52,7 @@ const SPECS: Record<number, GarmentSpec> = {
   },
   // American Apparel 1301 — Classic Tee
   725: {
+    material: "6.0 oz cotton",
     summary:
       "A mid-weight cotton tee with a classic, true-to-size cut. Smooth enough for detailed prints and sturdy enough for regular rotation.",
     points: [
@@ -58,6 +63,7 @@ const SPECS: Record<number, GarmentSpec> = {
   },
   // Champion T453W — Women's Heritage Cropped T-Shirt
   672: {
+    material: "7.0 oz cotton jersey",
     summary:
       "A cropped women's cut in a heavy 7 oz cotton jersey, finished with double-needle stitching and the maker's C patch on the left sleeve.",
     points: [
@@ -70,6 +76,7 @@ const SPECS: Record<number, GarmentSpec> = {
   },
   // American Apparel 1302GD — Women's Garment-Dyed Heavyweight Cropped Tee
   5784: {
+    material: "6.0 oz garment-dyed cotton",
     summary:
       "A boxy, cropped women's tee in heavyweight US cotton, garment-dyed for a faded, broken-in color.",
     points: [
@@ -83,6 +90,7 @@ const SPECS: Record<number, GarmentSpec> = {
   },
   // Shaka Wear SHGDD — Garment-Dyed Drop-Shoulder T-Shirt
   1723: {
+    material: "7.5 oz garment-dyed cotton",
     summary:
       "A heavyweight cotton tee, garment-dyed for a washed, vintage color, with dropped shoulders and a relaxed, boxy body.",
     points: [
@@ -97,6 +105,7 @@ const SPECS: Record<number, GarmentSpec> = {
   },
   // Comfort Colors 3023CL — Women's Boxy Tee
   1393: {
+    material: "6.1 oz ring-spun cotton",
     summary: "An oversized women's tee with a boxy, slightly cropped body in soft ring-spun US cotton.",
     points: [
       "6.1 oz 100% ring-spun US cotton",
@@ -107,6 +116,7 @@ const SPECS: Record<number, GarmentSpec> = {
   },
   // Gildan 5000 — Heavy Cotton Tee
   6: {
+    material: "5.3 oz cotton",
     summary:
       "A dependable heavy cotton tee: a tight knit that holds crisp print detail, on a body with no side seams.",
     points: [
@@ -118,6 +128,7 @@ const SPECS: Record<number, GarmentSpec> = {
   },
   // Gildan 64000 — Softstyle T-Shirt
   145: {
+    material: "Ring-spun cotton",
     summary: "A lighter, softer everyday tee with a modern unisex cut and no side seams.",
     points: [
       "Ring-spun cotton; solid colors are 100% cotton, heathers are blends",
@@ -129,11 +140,13 @@ const SPECS: Record<number, GarmentSpec> = {
   },
   // Bella+Canvas 1010 — Women's Micro Rib Baby Tee
   5358: {
+    material: "Cotton/polyester micro rib",
     summary: "A fitted, mid-length baby tee in a stretchy micro rib knit.",
     points: ["5.3 oz cotton/polyester blend (52/48)", "1x1 micro rib", "Fitted, mid-length cut"],
   },
   // Lane Seven LS14001 — Three-Panel Fleece Hoodie
   439: {
+    material: "8.25 oz cotton/recycled polyester fleece",
     summary:
       "A medium-heavy fleece hoodie with a brushed interior and a clean, structured outside that carries a large print without bulk.",
     points: [
@@ -148,6 +161,7 @@ const SPECS: Record<number, GarmentSpec> = {
   },
   // OTTO Cap 31-069 — Mid Profile Baseball Cap
   2041: {
+    material: "Polyester/cotton twill",
     summary:
       "A structured five-panel cap with a mid-height crown. Buckram backs the seamless front panel so the embroidery sits flat and the shape stays put.",
     points: [
@@ -161,6 +175,7 @@ const SPECS: Record<number, GarmentSpec> = {
   },
   // AS Colour 1114 — Surf Cap
   1583: {
+    material: "Recycled nylon",
     summary: "An unstructured nylon cap that packs flat, dries fast and stays light on long days outside.",
     points: [
       "100% recycled nylon",
@@ -173,6 +188,7 @@ const SPECS: Record<number, GarmentSpec> = {
   },
   // Comfort Colors CCRC0 — Sunwashed Rope Cap
   6597: {
+    material: "Polyester micro ripstop",
     summary: "A semi-structured five-panel cap in lightweight ripstop, with a high crown and a rope braid across the bill.",
     points: [
       "3.69 oz 100% polyester micro ripstop",
@@ -185,6 +201,7 @@ const SPECS: Record<number, GarmentSpec> = {
   },
   // Yupoong 6007 — Flat Bill Cap
   1753: {
+    material: "Cotton twill",
     summary: "A high-crown, structured snapback in cotton twill with a flat bill and a green undervisor.",
     points: [
       "100% cotton twill",
@@ -196,6 +213,7 @@ const SPECS: Record<number, GarmentSpec> = {
   },
   // Matte Vertical Posters
   282: {
+    material: "Archival matte paper",
     summary:
       "Printed with pigment archival inks on heavy, museum-grade matte paper: no glare, deep blacks, made to hang for years.",
     points: [
@@ -208,11 +226,13 @@ const SPECS: Record<number, GarmentSpec> = {
   },
   // Pet Bandana
   562: {
+    material: "Polyester",
     summary: "A soft polyester bandana, printed on one side and sewn ready to tie.",
     points: ['100% polyester', 'Two sizes: 20" × 9.75" and 27" × 13"', "One-sided print", "Sewn-in label"],
   },
   // Clip-on Pet Bandana
   1672: {
+    material: "Polyester",
     summary: "A printed bandana on an adjustable black collar that clips on and comes off easily.",
     points: ["100% polyester", "Adjustable, removable collar", "Collar is not printed"],
   },
