@@ -90,6 +90,7 @@ async function items(d: StorefrontDesign): Promise<string[]> {
           tag("g:product_type", p.kind.many),
           tag("g:color", color),
           tag("g:size", size),
+          tag("g:material", p.spec?.material ?? p.blankLabel),
           ...(isApparel(p)
             ? [tag("g:age_group", "adult"), tag("g:gender", womens ? "female" : "unisex"), tag("g:size_system", "US")]
             : []),
