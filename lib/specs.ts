@@ -103,6 +103,19 @@ const SPECS: Record<number, GarmentSpec> = {
       "Assembled in the USA",
     ],
   },
+  // Next Level NL1580 — Women's Cropped Cotton Polyester T-Shirt
+  5474: {
+    material: "4.0 oz cotton/polyester",
+    summary: "A light, soft women's crop in a cotton/poly blend, cut to a regular fit with a rib collar that holds its shape.",
+    points: [
+      "4.0 oz 60/40 combed ring-spun cotton/polyester",
+      "Cropped, regular fit",
+      "1x1 rib knit collar",
+      "Taped shoulder to shoulder",
+      "Side-seamed",
+      "Tear-away label",
+    ],
+  },
   // Comfort Colors 3023CL — Women's Boxy Tee
   1393: {
     material: "6.1 oz ring-spun cotton",

@@ -11,3 +11,6 @@ npm-debug.log*
 # secrets — never commit real credentials
 .env
 .env*.local
+
+# written by `next dev`
+AGENTS.md

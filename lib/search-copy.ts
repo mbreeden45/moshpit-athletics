@@ -31,6 +31,12 @@ export const SEARCH_COPY: Record<string, SearchCopy> = {
     line: `A vintage Indiana basketball crest with a skeleton hand palming the ball, for Phoebe Bridgers fans with a midwest hoops streak. ${TRIBUTE}`,
     intro: `A tribute to midwestern basketball heritage, reimagined through an indie-goth lens.`,
   },
+  // The 25 Roses Tee (all three blanks share the search copy via the design)
+  "6af24bc3dbbd8cf33207c7fc": {
+    keywords: "USC Trojans 25x Rose Bowl Champions Shirt",
+    line: `A cardinal-and-gold tribute to USC's 25 Rose Bowl wins, 1923 to 2017: every year on the back under a big gold rose, with a small SC and rose on the chest. ${TRIBUTE}`,
+    intro: `Twenty-five roses and counting. Every win, all on one shirt.`,
+  },
   // Pasadena caps (all three styles)
   "6ae253dc0626d40cc4067419": {
     keywords: "Pasadena City of Roses Rose Bowl Hat",

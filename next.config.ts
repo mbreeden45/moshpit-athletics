@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
       // "all" is the home page.
       ["/collections", "/collections/all"].map((source) => ({ source, destination: "/", permanent: true })),
       // Slug the Bridgers tee briefly had after it was recreated in Printify.
+      {
+        source: "/products/the-25-roses-tee-usc-trojans-25x-rose-bowl-champions-shirt",
+        destination: "/products/the-25-roses-tee",
+        permanent: true,
+      },
       { source: "/products/bridgers-26-skeleton-graphic-tee", destination: "/products/the-skeleton-hoops-tee", permanent: true },
     );
   },
