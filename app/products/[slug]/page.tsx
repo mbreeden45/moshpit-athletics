@@ -131,6 +131,8 @@ async function productJsonLd(d: StorefrontDesign) {
         name: [d.fullName, d.products.length > 1 ? d.optionLabels[i] : null, [color, size].filter(Boolean).join(" / ")]
           .filter(Boolean)
           .join(" – "),
+        // Google checks each variant as its own product, so each carries a description too.
+        description: [d.searchLine, p.spec?.summary].filter(Boolean).join(" ") || d.fullName,
         ...(image ? { image: publicImageUrl(image) } : {}),
         // Required on every variant when the group varies by material (designs on several blanks).
         material: p.spec?.material ?? p.blankLabel,
