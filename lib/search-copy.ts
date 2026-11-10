@@ -37,6 +37,12 @@ export const SEARCH_COPY: Record<string, SearchCopy> = {
     line: `A cardinal-and-gold tribute to USC's 25 Rose Bowl wins, 1923 to 2017: every year on the back under a big gold rose, with a small SC and rose on the chest. ${TRIBUTE}`,
     intro: `Twenty-five roses and counting. Every win, all on one shirt.`,
   },
+  // The Final Showdown Tee
+  "6af3a5100802a1331609cb73": {
+    keywords: "USC vs UCLA 1987 Rivalry Football Shirt",
+    line: `A vintage-style game-day tee for the November 21, 1987 USC–UCLA crosstown showdown: two helmets face to face over a rose garland, with a Rose Bowl trip on the line. ${TRIBUTE}`,
+    intro: `Made like the bootlegs they sold in the parking lot that day. Winner take all.`,
+  },
   // Pasadena caps (all three styles)
   "6ae253dc0626d40cc4067419": {
     keywords: "Pasadena City of Roses Rose Bowl Hat",

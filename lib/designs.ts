@@ -66,6 +66,7 @@ const DESIGN_NAMES: Record<string, string> = {
   "6ae91c01c23e022f480b5502": "The Skeleton Hoops Tee",
   "6aeba05746bce03c1101d029": "The Skeleton Hoops Tee",
   "6af24bc3dbbd8cf33207c7fc": "The 25 Roses Tee",
+  "6af3a5100802a1331609cb73": "The Final Showdown Tee",
 };
 
 /**
