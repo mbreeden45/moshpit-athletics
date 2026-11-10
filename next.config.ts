@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
       ["/collections", "/collections/all"].map((source) => ({ source, destination: "/", permanent: true })),
       // Slug the Bridgers tee briefly had after it was recreated in Printify.
       {
+        source: "/products/vintage-1987-final-showdown-football-t-shirt",
+        destination: "/products/the-final-showdown-tee",
+        permanent: true,
+      },
+      {
         source: "/products/the-25-roses-tee-usc-trojans-25x-rose-bowl-champions-shirt",
         destination: "/products/the-25-roses-tee",
         permanent: true,
