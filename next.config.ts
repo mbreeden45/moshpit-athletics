@@ -25,6 +25,9 @@ const nextConfig: NextConfig = {
     );
   },
   images: {
+    // Resizing is done by Printify's image API (see lib/image-loader.ts), not Vercel.
+    loader: "custom",
+    loaderFile: "./lib/image-loader.ts",
     remotePatterns: [
       { protocol: "https", hostname: "images-api.printify.com" },
       { protocol: "https", hostname: "images.printify.com" },
